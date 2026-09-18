@@ -124,6 +124,8 @@
   .crumb{font-size:13px; color:var(--sub); font-weight:600;}
 
   .count-row{display:flex; gap:10px; margin-top:6px;}
+  .count-row.wrap{flex-wrap:wrap;}
+  .count-row.wrap .count-btn{flex:1 1 calc(25% - 8px); min-width:64px;}
   .count-btn{
     flex:1; padding:14px 0; border-radius:12px; border:2px solid #e6e9f5;
     background:#fff; font-weight:700; font-size:15px; cursor:pointer; color:var(--ink);
@@ -153,6 +155,8 @@
     display:flex; justify-content:space-between; align-items:center;
     font-size:13px; color:var(--sub); margin-bottom:10px; font-weight:600;
   }
+  .qtimer{font-weight:800;}
+  .qtimer.warn{color:var(--bad);}
   .progress-bar{
     height:8px; background:#eef1fb; border-radius:6px; overflow:hidden; margin-bottom:18px;
   }
@@ -168,12 +172,14 @@
     letter-spacing:.02em;
     margin-bottom:20px;
     min-height:70px;
-    display:flex; align-items:center; justify-content:center;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
     line-height:1.5;
     word-break:break-word;
   }
   .question-box sup{font-size:16px; vertical-align:super;}
   .question-box .small{font-size:16px; font-weight:500; color:var(--sub); display:block; margin-top:4px;}
+  .question-box .eq1{display:block;}
+  .question-box .eq2{font-size:26px; font-weight:700; display:block; margin-top:8px;}
 
   .answer-row{display:flex; gap:8px; margin-bottom:12px; align-items:center; justify-content:center;}
   .ans-input{
@@ -422,15 +428,26 @@ const STATE = {
   unit: null,
   level: 1,
   total: 10,
+  timeLimit: 0,      // 1問あたりの回答時間(秒)。0=制限なし
   index: 0,
   score: 0,
   startTime: 0,
+  qStartTime: 0,
   problems: [],      // 出題順の問題オブジェクト
   mistakes: [],      // {problem, given}
   retryMode: false,
   _retired: false,
   _attemptedTotal: 0,
 };
+const TIME_LIMITS = [
+  {sec:0, label:"なし", sub:"制限なし"},
+  {sec:5, label:"5秒", sub:""},
+  {sec:10, label:"10秒", sub:""},
+  {sec:15, label:"15秒", sub:""},
+  {sec:20, label:"20秒", sub:""},
+  {sec:25, label:"25秒", sub:""},
+  {sec:30, label:"30秒", sub:""},
+];
 
 /* ===================== 単元定義 ===================== */
 const GRADES = [
@@ -688,7 +705,7 @@ addUnit("g2","g2u2","式の乗法・除法(単項式)","単項式×多項式、�
 
 function xyProblem(eq1, eq2, x0, y0){
   return {
-    question: `${eq1}<span class="small">${eq2}</span>`,
+    question: `<span class="eq1">${eq1}</span><span class="eq2">${eq2}</span>`,
     mode:"xy",
     check: (xs,ys)=>{
       const xv = parseFractionToken((xs||"").trim());
@@ -985,6 +1002,14 @@ function renderSetup(){
         <button class="count-btn ${STATE.total===10?"selected":""}" data-count="10">10問</button>
         <button class="count-btn ${STATE.total===20?"selected":""}" data-count="20">20問</button>
       </div>
+      <div class="section-title">回答時間を選ぶ(1問あたり)</div>
+      <div class="count-row wrap">
+  `;
+  TIME_LIMITS.forEach(tl=>{
+    html += `<button class="count-btn timelimit-btn ${STATE.timeLimit===tl.sec?"selected":""}" data-timelimit="${tl.sec}">${tl.label}${tl.sub?`<small>${tl.sub}</small>`:""}</button>`;
+  });
+  html += `
+      </div>
       <button class="start-btn" id="startBtn">ドリルを始める ▶</button>
 
       <div class="section-title">この単元・レベルのランキング(自己ベスト上位)</div>
@@ -1004,6 +1029,13 @@ function renderSetup(){
       app.querySelectorAll("[data-count]").forEach(b=>b.classList.remove("selected"));
       btn.classList.add("selected");
       STATE.total = parseInt(btn.getAttribute("data-count"),10);
+    });
+  });
+  app.querySelectorAll("[data-timelimit]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      app.querySelectorAll("[data-timelimit]").forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected");
+      STATE.timeLimit = parseInt(btn.getAttribute("data-timelimit"),10);
     });
   });
   document.getElementById("startBtn").addEventListener("click", ()=>{
@@ -1091,6 +1123,7 @@ function renderDrill(){
       <div class="top-stats">
         <span>問題 ${STATE.index+1}/${total}</span>
         <span id="timerDisp">⏱ 0:00</span>
+        ${STATE.timeLimit>0 ? `<span id="qTimerDisp" class="qtimer">⏳ ${STATE.timeLimit}</span>` : ""}
         <span>正解 ${STATE.score}</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -1106,8 +1139,18 @@ function renderDrill(){
   if(window.__drillTimer) clearInterval(window.__drillTimer);
   window.__drillTimer = setInterval(updateTimer, 1000);
 
+  // 1問あたりの回答時間(制限がある場合)
+  if(window.__qTimer) clearInterval(window.__qTimer);
+  window.__qTimer = null;
+  if(STATE.timeLimit>0){
+    STATE.qStartTime = Date.now();
+    updateQTimer();
+    window.__qTimer = setInterval(updateQTimer, 200);
+  }
+
   document.getElementById("quitBtn").addEventListener("click", ()=>{
     if(window.confirm("ドリルをやめて、ここまでの結果を見ますか?")){
+      if(window.__qTimer){ clearInterval(window.__qTimer); window.__qTimer=null; }
       finishDrill(true);
     }
   });
@@ -1174,6 +1217,20 @@ function updateTimer(){
   el.textContent = "⏱ " + formatTime(sec);
 }
 
+function updateQTimer(){
+  const el = document.getElementById("qTimerDisp");
+  if(!el) return;
+  const elapsed = (Date.now()-STATE.qStartTime)/1000;
+  const remaining = Math.max(0, STATE.timeLimit - elapsed);
+  const remainingCeil = Math.ceil(remaining);
+  el.textContent = "⏳ " + remainingCeil;
+  el.classList.toggle("warn", remainingCeil<=3);
+  if(remaining<=0){
+    if(window.__qTimer){ clearInterval(window.__qTimer); window.__qTimer=null; }
+    handleTimeout();
+  }
+}
+
 function submitAnswer(){
   const p = STATE.problems[STATE.index];
   let ok = false;
@@ -1193,7 +1250,16 @@ function submitAnswer(){
     givenText = `(x+${a})(x+${b})`;
     ok = p.check(a,b);
   }
+  resolveAnswer(ok, givenText, false);
+}
 
+function handleTimeout(){
+  resolveAnswer(false, "(時間切れ)", true);
+}
+
+function resolveAnswer(ok, givenText, isTimeout){
+  if(window.__qTimer){ clearInterval(window.__qTimer); window.__qTimer=null; }
+  const p = STATE.problems[STATE.index];
   const fb = document.getElementById("feedback");
   if(ok){
     STATE.score++;
@@ -1201,7 +1267,7 @@ function submitAnswer(){
     fb.className = "feedback ok";
     playCorrect();
   } else {
-    fb.textContent = "× ちがうよ… 正解: " + p.correctAnswerText;
+    fb.textContent = (isTimeout ? "× 時間切れ… 正解: " : "× ちがうよ… 正解: ") + p.correctAnswerText;
     fb.className = "feedback no";
     playWrong();
     STATE.mistakes.push({problem:p, given: givenText});
@@ -1226,6 +1292,7 @@ function disableInputs(){
 
 function finishDrill(retired){
   if(window.__drillTimer) clearInterval(window.__drillTimer);
+  if(window.__qTimer){ clearInterval(window.__qTimer); window.__qTimer=null; }
   const u = currentUnitObj();
   const key = unitKey(u.id, STATE.level);
   const timeSec = Math.floor((Date.now()-STATE.startTime)/1000);
