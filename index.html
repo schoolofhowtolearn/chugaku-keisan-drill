@@ -157,10 +157,20 @@
   }
   .qtimer{font-weight:800;}
   .qtimer.warn{color:var(--bad);}
-  .progress-bar{
-    height:8px; background:#eef1fb; border-radius:6px; overflow:hidden; margin-bottom:18px;
+  .qtime-bar{
+    height:8px; background:#eef1fb; border-radius:6px; overflow:hidden; margin-bottom:14px;
   }
-  .progress-fill{height:100%; background:var(--accent); transition:width .25s;}
+  .qtime-bar-fill{height:100%; background:var(--accent); transition:width .2s linear, background-color .2s;}
+  .qtime-bar-fill.warn{background:var(--bad);}
+
+  .dot-row{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:18px;}
+  .dot{
+    width:14px; height:14px; border-radius:50%; box-sizing:border-box;
+    background:#eef1fb; border:2px solid #dfe4f6; transition:transform .15s;
+  }
+  .dot.dot-current{background:var(--accent); border-color:var(--accent); transform:scale(1.25); box-shadow:0 0 0 3px rgba(79,109,245,.22);}
+  .dot.dot-correct{background:var(--good); border-color:var(--good);}
+  .dot.dot-wrong{background:var(--bad); border-color:var(--bad);}
 
   .question-box{
     background:#f7f9ff;
@@ -172,10 +182,11 @@
     letter-spacing:.02em;
     margin-bottom:20px;
     min-height:70px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    display:flex; align-items:center; justify-content:center;
     line-height:1.5;
     word-break:break-word;
   }
+  .question-box .qcontent{width:100%;}
   .question-box sup{font-size:16px; vertical-align:super;}
   .question-box .small{font-size:16px; font-weight:500; color:var(--sub); display:block; margin-top:4px;}
   .question-box .eq1{display:block;}
@@ -1083,7 +1094,6 @@ function renderDrill(){
   const u = currentUnitObj();
   const total = STATE.problems.length;
   const p = STATE.problems[STATE.index];
-  const pct = total>0 ? Math.round((STATE.index/total)*100) : 0;
 
   let inputHtml = "";
   if(p.mode==="text"){
@@ -1126,8 +1136,9 @@ function renderDrill(){
         ${STATE.timeLimit>0 ? `<span id="qTimerDisp" class="qtimer">⏳ ${STATE.timeLimit}</span>` : ""}
         <span>正解 ${STATE.score}</span>
       </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      <div class="question-box">${p.question}</div>
+      ${STATE.timeLimit>0 ? `<div class="qtime-bar"><div class="qtime-bar-fill" id="qTimeBarFill" style="width:100%"></div></div>` : ""}
+      ${renderDots()}
+      <div class="question-box"><div class="qcontent">${p.question}</div></div>
       ${inputHtml}
       <div class="feedback" id="feedback"></div>
     </div>
@@ -1219,16 +1230,41 @@ function updateTimer(){
 
 function updateQTimer(){
   const el = document.getElementById("qTimerDisp");
-  if(!el) return;
+  const bar = document.getElementById("qTimeBarFill");
+  if(!el && !bar) return;
   const elapsed = (Date.now()-STATE.qStartTime)/1000;
   const remaining = Math.max(0, STATE.timeLimit - elapsed);
   const remainingCeil = Math.ceil(remaining);
-  el.textContent = "⏳ " + remainingCeil;
-  el.classList.toggle("warn", remainingCeil<=3);
+  const isWarn = remainingCeil<=3;
+  if(el){
+    el.textContent = "⏳ " + remainingCeil;
+    el.classList.toggle("warn", isWarn);
+  }
+  if(bar){
+    const ratio = STATE.timeLimit>0 ? Math.max(0, Math.min(1, remaining/STATE.timeLimit)) : 0;
+    bar.style.width = (ratio*100) + "%";
+    bar.classList.toggle("warn", isWarn);
+  }
   if(remaining<=0){
     if(window.__qTimer){ clearInterval(window.__qTimer); window.__qTimer=null; }
     handleTimeout();
   }
+}
+
+function renderDots(){
+  let html = '<div class="dot-row">';
+  STATE.problems.forEach((prob, i)=>{
+    let cls = "dot";
+    if(i < STATE.index){
+      const wasWrong = STATE.mistakes.some(m=>m.problem===prob);
+      cls += wasWrong ? " dot-wrong" : " dot-correct";
+    } else if(i === STATE.index){
+      cls += " dot-current";
+    }
+    html += `<span class="${cls}"></span>`;
+  });
+  html += '</div>';
+  return html;
 }
 
 function submitAnswer(){
