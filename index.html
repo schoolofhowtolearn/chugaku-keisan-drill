@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>中学計算ドリル 1・2・3年</title>
+<style>
+  :root{
+    --bg1:#eef4ff;
+    --bg2:#f7f3ff;
+    --card:#ffffff;
+    --ink:#1f2733;
+    --sub:#6b7280;
+    --accent:#4f6df5;
+    --accent-dark:#3450d1;
+    --good:#22b573;
+    --bad:#e6533d;
+    --g1:#4f6df5;
+    --g2:#20b2a0;
+    --g3:#a856d6;
+    --shadow:0 10px 30px rgba(40,60,120,.12);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,-apple-system,sans-serif;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2));
+    min-height:100vh;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:20px 12px 60px;
+  }
+  #app{
+    width:100%;
+    max-width:560px;
+  }
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px 20px;
+    margin-bottom:16px;
+  }
+  h1.title{
+    text-align:center;
+    font-size:22px;
+    margin:6px 0 4px;
+    letter-spacing:.02em;
+  }
+  .subtitle{
+    text-align:center;
+    color:var(--sub);
+    font-size:13px;
+    margin-bottom:18px;
+  }
+  .grade-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .big-btn{
+    border:none;
+    border-radius:16px;
+    padding:20px 16px;
+    font-size:18px;
+    font-weight:700;
+    color:#fff;
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    transition:transform .12s, box-shadow .12s;
+    box-shadow:0 6px 16px rgba(0,0,0,.12);
+  }
+  .big-btn:active{transform:scale(.97);}
+  .big-btn small{
+    display:block;
+    font-size:12px;
+    font-weight:400;
+    opacity:.85;
+    margin-top:4px;
+  }
+  .g1{background:linear-gradient(135deg,#5b7cfa,#4f6df5);}
+  .g2{background:linear-gradient(135deg,#22c3ac,#1a9e8c);}
+  .g3{background:linear-gradient(135deg,#b866e8,#9d4fd6);}
+  .arrow{font-size:22px; opacity:.8;}
+
+  .unit-list{display:flex; flex-direction:column; gap:10px;}
+  .unit-btn{
+    border:1px solid #e6e9f5;
+    background:#fbfcff;
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .unit-btn:active{background:#eef1fb;}
+  .unit-btn .tag{
+    font-size:11px;
+    color:#fff;
+    background:var(--accent);
+    padding:3px 8px;
+    border-radius:20px;
+    font-weight:700;
+    white-space:nowrap;
+    margin-left:8px;
+  }
+
+  .back-row{display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .back-btn{
+    border:none; background:#eef1fb; color:var(--accent-dark);
+    font-weight:700; font-size:14px; padding:8px 14px; border-radius:12px; cursor:pointer;
+  }
+  .back-btn:active{background:#dde3f7;}
+  .crumb{font-size:13px; color:var(--sub); font-weight:600;}
+
+  .count-row{display:flex; gap:10px; margin-top:6px;}
+  .count-btn{
+    flex:1; padding:14px 0; border-radius:12px; border:2px solid #e6e9f5;
+    background:#fff; font-weight:700; font-size:15px; cursor:pointer; color:var(--ink);
+    line-height:1.4;
+  }
+  .count-btn.selected{border-color:var(--accent); background:#eef1fb; color:var(--accent-dark);}
+  .count-btn small{display:block; font-size:11px; font-weight:500; color:var(--sub); margin-top:2px;}
+  .count-btn.selected small{color:var(--accent-dark);}
+
+  .start-btn{
+    width:100%; margin-top:16px; padding:16px; border:none; border-radius:14px;
+    background:var(--accent); color:#fff; font-size:17px; font-weight:800; cursor:pointer;
+    box-shadow:0 8px 18px rgba(79,109,245,.35);
+  }
+  .start-btn:active{transform:scale(.98);}
+
+  /* drill screen */
+  .drill-header{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;
+  }
+  .quit-btn{
+    border:none; background:#fde9e6; color:var(--bad); font-weight:700; font-size:12px;
+    padding:7px 13px; border-radius:10px; cursor:pointer; white-space:nowrap;
+  }
+  .quit-btn:active{background:#fbd6d1;}
+  .top-stats{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; color:var(--sub); margin-bottom:10px; font-weight:600;
+  }
+  .progress-bar{
+    height:8px; background:#eef1fb; border-radius:6px; overflow:hidden; margin-bottom:18px;
+  }
+  .progress-fill{height:100%; background:var(--accent); transition:width .25s;}
+
+  .question-box{
+    background:#f7f9ff;
+    border-radius:16px;
+    padding:28px 16px;
+    text-align:center;
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:.02em;
+    margin-bottom:20px;
+    min-height:70px;
+    display:flex; align-items:center; justify-content:center;
+    line-height:1.5;
+    word-break:break-word;
+  }
+  .question-box sup{font-size:16px; vertical-align:super;}
+  .question-box .small{font-size:16px; font-weight:500; color:var(--sub); display:block; margin-top:4px;}
+
+  .answer-row{display:flex; gap:8px; margin-bottom:12px; align-items:center; justify-content:center;}
+  .ans-input{
+    font-size:22px; text-align:center; padding:12px 10px; border-radius:12px;
+    border:2px solid #dfe4f6; width:100%; font-weight:700; color:var(--ink);
+    font-family:inherit;
+  }
+  .ans-input:focus{outline:none; border-color:var(--accent);}
+  .ans-input.small2{width:90px; flex:none;}
+  .xy-label{font-size:20px; font-weight:800; color:var(--sub);}
+
+  .keypad{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:14px;}
+  .key{
+    min-width:44px; height:44px; border-radius:10px; border:none;
+    background:#eef1fb; color:var(--ink); font-size:17px; font-weight:700; cursor:pointer;
+  }
+  .key:active{background:#dde3f7;}
+  .key.wide{min-width:70px;}
+  .key.op{background:#e7f1ff; color:var(--accent-dark);}
+  .key.del{background:#fde9e6; color:var(--bad);}
+  .key.enter{background:var(--accent); color:#fff; flex:1; min-width:120px;}
+
+  .feedback{
+    text-align:center; font-size:16px; font-weight:800; min-height:26px; margin-bottom:6px;
+  }
+  .feedback.ok{color:var(--good);}
+  .feedback.no{color:var(--bad);}
+
+  .hint{text-align:center; font-size:12px; color:var(--sub); margin-top:-6px; margin-bottom:14px;}
+
+  /* result screen */
+  .result-score{
+    text-align:center; font-size:44px; font-weight:900; color:var(--accent-dark); margin:6px 0 0;
+  }
+  .result-sub{text-align:center; color:var(--sub); font-size:14px; margin-bottom:18px;}
+  .retired-note{
+    text-align:center; color:var(--bad); font-size:13px; font-weight:700; margin-bottom:10px;
+  }
+  .newrecord{
+    text-align:center; color:#fff; background:linear-gradient(135deg,#ffb648,#ff8a3d);
+    display:inline-block; padding:6px 16px; border-radius:20px; font-weight:800; font-size:13px;
+    margin:0 auto 14px; display:block; width:fit-content;
+  }
+  .miss-list{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+  .miss-item{
+    background:#fff7f5; border:1px solid #ffe1db; border-radius:12px; padding:10px 12px; font-size:14px;
+  }
+  .miss-item .q{font-weight:700; margin-bottom:3px;}
+  .miss-item .a{color:var(--sub);}
+  .miss-item .a b{color:var(--good);}
+  .miss-item .a .wrong{color:var(--bad); text-decoration:line-through; margin-right:6px;}
+
+  .btn-row{display:flex; gap:10px; margin-top:16px;}
+  .btn-row button{flex:1; padding:14px 0; border-radius:12px; border:none; font-weight:800; font-size:14px; cursor:pointer;}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-ghost{background:#eef1fb; color:var(--accent-dark);}
+
+  table.rank{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+  table.rank th, table.rank td{padding:7px 6px; text-align:center; border-bottom:1px solid #eef1fb;}
+  table.rank th{color:var(--sub); font-weight:700;}
+  table.rank td.me{font-weight:800; color:var(--accent-dark);}
+
+  .section-title{font-size:14px; font-weight:800; color:var(--sub); margin:18px 0 6px; letter-spacing:.03em;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===================== ユーティリティ ===================== */
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function rndNonZero(min,max){ let v; do{ v=rnd(min,max); }while(v===0); return v; }
+function choice(arr){ return arr[rnd(0,arr.length-1)]; }
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+
+function fmt(n){ return n<0 ? "−"+Math.abs(n) : String(n); }
+// 数列(先頭含む)を + / − でつないだ式を作る。terms: number[]
+function chain(terms){
+  // 加減算チェーン: [ -5, 8, -3 ] -> "−5+8−3"
+  let s = "";
+  terms.forEach((t,i)=>{
+    if(i===0){ s += (t<0? "−"+Math.abs(t) : String(t)); }
+    else{ s += (t<0? "−"+Math.abs(t) : "+"+t); }
+  });
+  return s;
+}
+
+/* ===================== 音 (Web Audio) ===================== */
+let actx = null;
+function ctx(){ if(!actx){ actx = new (window.AudioContext||window.webkitAudioContext)(); } return actx; }
+function beep(freq, dur, type, vol, delay){
+  try{
+    const c = ctx();
+    const t0 = c.currentTime + (delay||0);
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type||"sine";
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(vol||0.2, t0+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }catch(e){}
+}
+function playCorrect(){ beep(880,0.12,"sine",0.22,0); beep(1320,0.16,"sine",0.18,0.09); }
+function playWrong(){ beep(180,0.28,"sawtooth",0.15,0); }
+function playClear(){ beep(660,0.1,"sine",0.2,0); beep(880,0.1,"sine",0.2,0.1); beep(1100,0.22,"sine",0.22,0.2); }
+
+/* ===================== 解答パーサー ===================== */
+function parseFractionToken(tok){
+  if(typeof tok!=="string") return null;
+  tok = tok.trim();
+  if(tok==="") return null;
+  const mFrac = tok.match(/^([+-]?\d+)\/(\d+)$/);
+  if(mFrac){
+    const den = parseInt(mFrac[2],10);
+    if(den===0) return null;
+    return parseInt(mFrac[1],10)/den;
+  }
+  const mDec = tok.match(/^[+-]?\d+(\.\d+)?$/);
+  if(mDec) return parseFloat(tok);
+  return null;
+}
+function formatRoot(n){
+  const r = Math.round(n);
+  if(Math.abs(n-r)<1e-9) return String(r);
+  // このアプリでは分母2の分数(半整数)のみ生成される
+  const den = 2;
+  const num = Math.round(n*den);
+  const g = gcd(num,den);
+  return `${num/g}/${den/g}`;
+}
+function parseMultiRoots(str){
+  if(typeof str!=="string") return null;
+  let s = str.replace(/x\s*=/gi,"").trim();
+  if(s==="") return null;
+  const parts = s.split(/[,、\s]+/).filter(x=>x!=="");
+  if(parts.length===0) return null;
+  const nums = parts.map(parseFractionToken);
+  if(nums.some(n=>n===null)) return null;
+  return nums;
+}
+function rootsMatch(expected, given){
+  if(!given || given.length===0) return false;
+  const r = v => Math.round(v*1000)/1000;
+  const expSet = [...new Set(expected.map(r))].sort((a,b)=>a-b);
+  const givSet = [...new Set(given.map(r))].sort((a,b)=>a-b);
+  if(expSet.length!==givSet.length) return false;
+  return expSet.every((v,i)=>Math.abs(v-givSet[i])<1e-6);
+}
+// 多項式(x, y, x^2, y^2まで)の解析
+function parsePoly(str){
+  if(typeof str!=="string") return null;
+  let s = str.replace(/\s+/g,"");
+  if(s==="") return null;
+  if(s[0]!=="+" && s[0]!=="-" && s[0]!=="−") s = "+"+s;
+  s = s.replace(/−/g,"-");
+  const tokens = s.match(/[+-][^+-]+/g);
+  if(!tokens) return null;
+  const poly = {const:0, x:0, x2:0, y:0, y2:0};
+  for(const tok of tokens){
+    const sign = tok[0]==="-" ? -1 : 1;
+    const body = tok.slice(1);
+    if(body==="") return null;
+    const m = body.match(/^(\d*)(x\^2|x|y\^2|y)?$/);
+    if(!m) return null;
+    if(m[1]==="" && m[2]===undefined) return null; // 記号だけは無効
+    let coeff = m[1]==="" ? 1 : parseInt(m[1],10);
+    coeff *= sign;
+    const v = m[2]||"";
+    if(v==="") poly.const += coeff;
+    else if(v==="x") poly.x += coeff;
+    else if(v==="x^2") poly.x2 += coeff;
+    else if(v==="y") poly.y += coeff;
+    else if(v==="y^2") poly.y2 += coeff;
+  }
+  return poly;
+}
+function polyEqual(a,b){
+  return a.const===b.const && a.x===b.x && a.x2===b.x2 && a.y===b.y && a.y2===b.y2;
+}
+function polyToDisplay(p){
+  // 表示用(答え確認画面のみ)
+  let parts = [];
+  if(p.x2){ parts.push((p.x2===1?"":p.x2===-1?"-":p.x2)+"x^2"); }
+  if(p.x){ parts.push((p.x===1?"":p.x===-1?"-":p.x)+"x"); }
+  if(p.y2){ parts.push((p.y2===1?"":p.y2===-1?"-":p.y2)+"y^2"); }
+  if(p.y){ parts.push((p.y===1?"":p.y===-1?"-":p.y)+"y"); }
+  if(p.const || parts.length===0){ parts.push(String(p.const)); }
+  let s = parts[0];
+  for(let i=1;i<parts.length;i++){
+    s += (parts[i][0]==="-") ? parts[i] : "+"+parts[i];
+  }
+  return s;
+}
+// 平方根 a√b 形式
+function parseSurd(str){
+  if(typeof str!=="string") return null;
+  let s = str.replace(/\s+/g,"").replace(/root|ルート/gi,"√");
+  if(s==="") return null;
+  const m = s.match(/^([+-]?\d*)(√(\d+))?$/);
+  if(!m) return null;
+  const hasRoot = !!m[2];
+  let coeffStr = m[1];
+  let sign = 1;
+  if(coeffStr.startsWith("-")){ sign=-1; coeffStr=coeffStr.slice(1); }
+  else if(coeffStr.startsWith("+")){ coeffStr=coeffStr.slice(1); }
+  let coeffNum;
+  if(coeffStr===""){
+    if(!hasRoot) return null;
+    coeffNum = 1;
+  } else {
+    coeffNum = parseInt(coeffStr,10);
+  }
+  coeffNum *= sign;
+  const radicand = hasRoot ? parseInt(m[3],10) : 1;
+  if(radicand<=0) return null;
+  return {coeff:coeffNum, radicand:radicand};
+}
+function surdEqual(a,b){ return a.coeff===b.coeff && a.radicand===b.radicand; }
+function simplifySurd(n){
+  // n を a^2 * d (dは平方因子なし) に分解 -> {coeff:a, radicand:d}
+  let d = n, a = 1;
+  for(let k=Math.floor(Math.sqrt(d)); k>=2; k--){
+    if(d % (k*k) === 0){ a = k; d = d/(k*k); break; }
+  }
+  return {coeff:a, radicand:d};
+}
+
+/* ===================== 難易度レベル ===================== */
+const LEVELS = [
+  {id:1, label:"レベル1", sub:"やさしい"},
+  {id:2, label:"レベル2", sub:"ふつう"},
+  {id:3, label:"レベル3", sub:"むずかしい"},
+];
+function unitKey(unitId, level){ return unitId + "_L" + level; }
+
+/* ===================== 状態 ===================== */
+const STATE = {
+  screen: "home",   // home / units / setup / drill / result
+  grade: null,
+  unit: null,
+  level: 1,
+  total: 10,
+  index: 0,
+  score: 0,
+  startTime: 0,
+  problems: [],      // 出題順の問題オブジェクト
+  mistakes: [],      // {problem, given}
+  retryMode: false,
+  _retired: false,
+  _attemptedTotal: 0,
+};
+
+/* ===================== 単元定義 ===================== */
+const GRADES = [
+  {id:"g1", name:"中学1年", color:"g1", units:[]},
+  {id:"g2", name:"中学2年", color:"g2", units:[]},
+  {id:"g3", name:"中学3年", color:"g3", units:[]},
+];
+
+function addUnit(gradeId, id, name, desc, genFn){
+  const g = GRADES.find(g=>g.id===gradeId);
+  g.units.push({id, name, desc, gen:genFn});
+}
+
+/* ---- 中学1年 ---- */
+addUnit("g1","g1u1","正負の数の加法・減法","たし算とひき算", function(level){
+  level = level||1;
+  const range = level===1?10:level===2?15:20;
+  const n = level===1 ? 2 : (level===2 ? choice([2,2,3]) : 3);
+  const terms = [];
+  for(let i=0;i<n;i++) terms.push(rndNonZero(-range,range));
+  const answer = terms.reduce((a,b)=>a+b,0);
+  const display = chain(terms);
+  return {
+    question: display,
+    mode:"text",
+    placeholder:"例: -3",
+    keys:["0","1","2","3","4","5","6","7","8","9","−"],
+    check: (s)=>{ const v=parseFractionToken((s||"").trim()); return v!==null && v===answer; },
+    correctAnswerText: String(answer),
+  };
+});
+
+function fmtP(n){ return n<0 ? `(−${Math.abs(n)})` : String(n); }
+function numAnswerProblem(display, answer){
+  return {
+    question: display,
+    mode:"text",
+    placeholder:"例: -12",
+    keys:["0","1","2","3","4","5","6","7","8","9","−"],
+    check: (s)=>{ const v=parseFractionToken((s||"").trim()); return v!==null && v===answer; },
+    correctAnswerText: String(answer),
+  };
+}
+
+addUnit("g1","g1u2","正負の数の乗法・除法","かけ算とわり算", function(level){
+  level = level||1;
+  if(level===1){
+    const a = rndNonZero(-9,9), b = rndNonZero(-9,9);
+    return numAnswerProblem(`${fmtP(a)}×${fmtP(b)}`, a*b);
+  }
+  const threeTermChance = level===2 ? 0.35 : 0.55;
+  const range = level===2 ? 12 : 15;
+  const threeTerm = Math.random()<threeTermChance;
+  if(!threeTerm){
+    const isDiv = Math.random()<0.5;
+    if(isDiv){
+      const divisor = rndNonZero(2, range);
+      const quotient = rndNonZero(-range,range);
+      const dividend = divisor*quotient;
+      return numAnswerProblem(`${fmtP(dividend)}÷${fmtP(divisor)}`, quotient);
+    } else {
+      const a = rndNonZero(-range,range), b = rndNonZero(-range,range);
+      return numAnswerProblem(`${fmtP(a)}×${fmtP(b)}`, a*b);
+    }
+  } else {
+    const a = rndNonZero(-9,9), b = rndNonZero(-9,9), c = rndNonZero(-9,9);
+    return numAnswerProblem(`${fmtP(a)}×${fmtP(b)}×${fmtP(c)}`, a*b*c);
+  }
+});
+
+addUnit("g1","g1u3","四則混合(累乗を含む)","かっこ・累乗をふくむ計算", function(level){
+  level = level||1;
+  const kinds = level===1 ? ["a+b*c","a-b*c","a*b+c"] : ["a+b*c","a-b*c","a*b+c","sq+b","sq-b","a*(b+c)"];
+  const range = level===1?6: level===2?9:12;
+  const sqRange = level===1?10: level===2?20:28;
+  const kind = choice(kinds);
+  let display, answer;
+  if(kind==="a+b*c"){
+    const a=rndNonZero(-range,range), b=rndNonZero(-range,range), c=rndNonZero(-range,range);
+    display = `${fmtP(a)}+${fmtP(b)}×${fmtP(c)}`; answer = a+b*c;
+  } else if(kind==="a-b*c"){
+    const a=rndNonZero(-range,range), b=rndNonZero(-range,range), c=rndNonZero(-range,range);
+    display = `${fmtP(a)}−${fmtP(b)}×${fmtP(c)}`; answer = a-b*c;
+  } else if(kind==="a*b+c"){
+    const a=rndNonZero(-range,range), b=rndNonZero(-range,range), c=rndNonZero(-range,range);
+    display = `${fmtP(a)}×${fmtP(b)}+${fmtP(c)}`; answer = a*b+c;
+  } else if(kind==="sq+b"){
+    const a=rndNonZero(-9,9), b=rndNonZero(-sqRange,sqRange);
+    display = `(${fmtP(a)})<sup>2</sup>+${fmtP(b)}`; answer = a*a+b;
+  } else if(kind==="sq-b"){
+    const a=rndNonZero(-9,9), b=rndNonZero(-sqRange,sqRange);
+    display = `(${fmtP(a)})<sup>2</sup>−${fmtP(b)}`; answer = a*a-b;
+  } else {
+    const a=rndNonZero(-range,range), b=rndNonZero(-range,range), c=rndNonZero(-range,range);
+    display = `${fmtP(a)}×(${fmtP(b)}+${fmtP(c)})`; answer = a*(b+c);
+  }
+  return numAnswerProblem(display, answer);
+});
+
+addUnit("g1","g1u4","文字式の計算(項の整理)","同じ項をまとめる", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?9:12;
+  const n = level===1 ? 3 : (level===2 ? choice([3,3,4]) : choice([4,4,5]));
+  let cx=0, ck=0;
+  const parts=[];
+  for(let i=0;i<n;i++){
+    if(Math.random()<0.6){
+      const c = rndNonZero(-range,range);
+      cx += c; parts.push({c, isX:true});
+    } else {
+      const c = rndNonZero(-range,range);
+      ck += c; parts.push({c, isX:false});
+    }
+  }
+  let s="";
+  parts.forEach((p,i)=>{
+    const val = p.isX ? (p.c===1?"x":p.c===-1?"-x":`${p.c}x`) : `${p.c}`;
+    if(i===0){ s += val; }
+    else { s += (val[0]==="-") ? val : "+"+val; }
+  });
+  s = s.replace(/-/g,"−");
+  return {
+    question: s,
+    mode:"text",
+    placeholder:"例: 2x+7",
+    keys:["0","1","2","3","4","5","6","7","8","9","x","+","−"],
+    check: (str)=>{ const p=parsePoly(str); return p!==null && p.x===cx && p.const===ck && p.x2===0 && p.y===0 && p.y2===0; },
+    correctAnswerText: polyToDisplay({const:ck, x:cx, x2:0, y:0, y2:0}),
+  };
+});
+
+function polyAnswerProblem(display, expectedPoly){
+  return {
+    question: display,
+    mode:"text",
+    placeholder:"例: -6x+15",
+    keys:["0","1","2","3","4","5","6","7","8","9","x","^2","+","−"],
+    check: (str)=>{ const p=parsePoly(str); return p!==null && polyEqual(p, expectedPoly); },
+    correctAnswerText: polyToDisplay(expectedPoly),
+  };
+}
+
+addUnit("g1","g1u5","文字式の計算(乗法・除法)","1次式のかけ算・わり算", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?9:12;
+  const kind = level===1 ? "dist" : choice(["mul","div","dist"]);
+  if(kind==="mul"){
+    const c = rndNonZero(-range,range), k = rndNonZero(-range,range);
+    const cx = c*k;
+    const disp = `(${c}x)×(${fmtP(k)})`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:0,x:cx,x2:0,y:0,y2:0});
+  } else if(kind==="div"){
+    const k = rndNonZero(2,range);
+    const cx0 = rndNonZero(-range,range);
+    const dividend = cx0*k;
+    const disp = `${dividend}x÷${fmtP(k)}`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:0,x:cx0,x2:0,y:0,y2:0});
+  } else {
+    const a = rndNonZero(-range,range), b = rndNonZero(-range,range), c = rndNonZero(-range,range);
+    const cx = a*b, ck = a*c;
+    const disp = `${a}(${b}x${c>=0?"+"+c:"−"+Math.abs(c)})`.replace(/^−/,"−").replace(/(\d)\(/,"$1(");
+    return polyAnswerProblem(disp.replace(/-/g,"−"), {const:ck,x:cx,x2:0,y:0,y2:0});
+  }
+});
+
+function termConst(n){
+  // 定数項を "+n" / "−|n|" / "" (n===0なら省略) の形にする
+  if(n===0) return "";
+  return n>0 ? "+"+n : "−"+Math.abs(n);
+}
+function cleanCoeff(s){
+  return s.replace(/(^|[^0-9])1x/g,"$1x").replace(/(^|[^0-9])-1x/g,"$1-x").replace(/-/g,"−");
+}
+function equationProblem(display, x0){
+  return {
+    question: display + "<span class='small'>x = ?</span>",
+    mode:"text",
+    placeholder:"例: 5",
+    keys:["0","1","2","3","4","5","6","7","8","9","−","/"],
+    check: (s)=>{ const v=parseFractionToken((s||"").trim()); return v!==null && Math.abs(v-x0)<1e-9; },
+    correctAnswerText: String(x0),
+  };
+}
+addUnit("g1","g1u6","一次方程式","xについて解く", function(level){
+  level = level||1;
+  const xyLim = level===1?8:level===2?10:12;
+  const x0 = rndNonZero(-xyLim,xyLim);
+  const bothSides = level===1 ? false : (level===2 ? Math.random()<0.5 : Math.random()<0.8);
+  const coeffRange = level===1?5:level===2?6:8;
+  const constRange = level===1?10:level===2?12:15;
+  if(!bothSides){
+    const a = rndNonZero(-coeffRange,coeffRange);
+    const b = rnd(-constRange,constRange);
+    const d = a*x0+b;
+    const disp = `${a}x${termConst(b)}=${d}`.replace(/^1x/,"x").replace(/^-1x/,"-x");
+    return equationProblem(cleanCoeff(disp), x0);
+  } else {
+    let a = rndNonZero(-coeffRange,coeffRange), c;
+    do{ c = rndNonZero(-coeffRange,coeffRange); }while(c===a);
+    const b = rnd(-constRange,constRange);
+    const d = (a-c)*x0+b;
+    const disp = `${a}x${termConst(b)}=${c}x${termConst(d)}`;
+    return equationProblem(cleanCoeff(disp), x0);
+  }
+});
+
+/* ---- 中学2年 ---- */
+function termStr(c, v){
+  if(c===1) return v;
+  if(c===-1) return "-"+v;
+  return `${c}${v}`;
+}
+function signTerm(c, v){
+  const t = termStr(Math.abs(c), v);
+  return (c<0? "-":"+") + t;
+}
+addUnit("g2","g2u1","式の加法・減法(多項式)","x, yの多項式をまとめる", function(level){
+  level = level||1;
+  const range = level===1?5:level===2?8:12;
+  const a1=rndNonZero(-range,range), b1=rndNonZero(-range,range);
+  const a2=rndNonZero(-range,range), b2=rndNonZero(-range,range);
+  const isAdd = level===1 ? true : Math.random()<0.5;
+  const cx = isAdd ? a1+a2 : a1-a2;
+  const cy = isAdd ? b1+b2 : b1-b2;
+  const t1 = `${termStr(a1,"x")}${signTerm(b1,"y")}`;
+  const t2 = `${termStr(a2,"x")}${signTerm(b2,"y")}`;
+  const disp = `(${t1})${isAdd?"+":"−"}(${t2})`.replace(/-/g,"−");
+  return polyAnswerProblem(disp, {const:0,x:cx,x2:0,y:cy,y2:0});
+});
+
+addUnit("g2","g2u2","式の乗法・除法(単項式)","単項式×多項式、単項式÷単項式", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?8:12;
+  const kind = level===1 ? "distA" : choice(["distA","distB","mulmono","divmono"]);
+  if(kind==="distA"){
+    const m = rndNonZero(-range,range), a = rndNonZero(-range,range), b = rndNonZero(-range,range);
+    const disp = `${m}x×(${a}x${b>=0?"+"+b:"−"+Math.abs(b)})`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:0,x:m*b,x2:m*a,y:0,y2:0});
+  } else if(kind==="distB"){
+    const m = rndNonZero(-range,range), a = rndNonZero(-range,range), b = rndNonZero(-range,range);
+    const disp = `(${a}x${b>=0?"+"+b:"−"+Math.abs(b)})×${m}x`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:0,x:m*b,x2:m*a,y:0,y2:0});
+  } else if(kind==="mulmono"){
+    const m = rndNonZero(-range,range), n = rndNonZero(-range,range);
+    const disp = `(${m}x)×(${fmtP(n)}x)`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:0,x:0,x2:m*n,y:0,y2:0});
+  } else {
+    const divisor = rndNonZero(-range,range);
+    const q = rndNonZero(-range,range);
+    const dividendX2 = divisor*q;
+    const disp = `${dividendX2}x<sup>2</sup>÷${fmtP(divisor)}x`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:0,x:q,x2:0,y:0,y2:0});
+  }
+});
+
+function xyProblem(eq1, eq2, x0, y0){
+  return {
+    question: `${eq1}<span class="small">${eq2}</span>`,
+    mode:"xy",
+    check: (xs,ys)=>{
+      const xv = parseFractionToken((xs||"").trim());
+      const yv = parseFractionToken((ys||"").trim());
+      return xv!==null && yv!==null && Math.abs(xv-x0)<1e-9 && Math.abs(yv-y0)<1e-9;
+    },
+    correctAnswerText: `x=${x0}, y=${y0}`,
+  };
+}
+function genSimultaneous(level){
+  level = level||1;
+  const xyRange = level===1?5:level===2?8:10;
+  const coeffRange = level===1?4:level===2?6:9;
+  const x0 = rndNonZero(-xyRange,xyRange), y0 = rndNonZero(-xyRange,xyRange);
+  let a1,b1,a2,b2;
+  do{
+    a1=rndNonZero(-coeffRange,coeffRange); b1=rndNonZero(-coeffRange,coeffRange);
+    a2=rndNonZero(-coeffRange,coeffRange); b2=rndNonZero(-coeffRange,coeffRange);
+  } while(a1*b2 - a2*b1 === 0);
+  const c1 = a1*x0+b1*y0;
+  const c2 = a2*x0+b2*y0;
+  const eq1 = `${a1}x${b1>=0?"+"+b1+"y":"−"+Math.abs(b1)+"y"}=${c1}`.replace(/-/g,"−");
+  const eq2 = `${a2}x${b2>=0?"+"+b2+"y":"−"+Math.abs(b2)+"y"}=${c2}`.replace(/-/g,"−");
+  return xyProblem(eq1, eq2, x0, y0);
+}
+addUnit("g2","g2u3","連立方程式(加減法)","2つの式からx,yを求める", function(level){ return genSimultaneous(level); });
+addUnit("g2","g2u4","連立方程式(代入法)","y=…の形から代入して解く", function(level){
+  level = level||1;
+  const xyRange = level===1?5:level===2?8:10;
+  const coeffRange = level===1?4:level===2?6:9;
+  const x0 = rndNonZero(-xyRange,xyRange), y0 = rndNonZero(-xyRange,xyRange);
+  const m = rndNonZero(-coeffRange,coeffRange);
+  const k = y0 - m*x0;
+  const p = rndNonZero(-coeffRange,coeffRange), q = rndNonZero(-coeffRange,coeffRange);
+  const r = p*x0 + q*y0;
+  const eq1 = `y=${m}x${termConst(k)}`.replace(/-/g,"−");
+  const eq2 = `${p}x${q>=0?"+"+q+"y":"−"+Math.abs(q)+"y"}=${r}`.replace(/-/g,"−");
+  return xyProblem(eq1, eq2, x0, y0);
+});
+
+/* ---- 中学3年 ---- */
+addUnit("g3","g3u1","多項式の展開","乗法公式で展開する", function(level){
+  level = level||1;
+  const kinds = level===1 ? ["ab","sqplus"] : ["ab","sqplus","sqminus","diff"];
+  const range = level===1?5:level===2?9:12;
+  const kind = choice(kinds);
+  if(kind==="ab"){
+    const a=rndNonZero(-range,range), b=rndNonZero(-range,range);
+    const disp = `(x${a>=0?"+"+a:"−"+Math.abs(a)})(x${b>=0?"+"+b:"−"+Math.abs(b)})`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:a*b, x:a+b, x2:1, y:0, y2:0});
+  } else if(kind==="sqplus" || kind==="sqminus"){
+    const a=rndNonZero(-range,range);
+    const disp = `(x${a>=0?"+"+a:"−"+Math.abs(a)})<sup>2</sup>`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:a*a, x:2*a, x2:1, y:0, y2:0});
+  } else {
+    const a=rndNonZero(1,range);
+    const disp = `(x+${a})(x−${a})`;
+    return polyAnswerProblem(disp, {const:-a*a, x:0, x2:1, y:0, y2:0});
+  }
+});
+
+addUnit("g3","g3u2","因数分解","x^2+bx+cを因数分解する", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?9:12;
+  let p,q;
+  do{ p = rndNonZero(-range,range); q = rndNonZero(-range,range); }while(p===0||q===0);
+  const b = p+q, c = p*q;
+  let disp = "x<sup>2</sup>";
+  if(b!==0) disp += `${b>0?"+"+b:"−"+Math.abs(b)}x`;
+  disp += `${c>0?"+"+c:c<0?"−"+Math.abs(c):""}`;
+  if(c===0 && b===0) disp = "x<sup>2</sup>";
+  return {
+    question: disp,
+    mode:"factor",
+    check: (as,bs)=>{
+      const av = parseInt((as||"").trim(),10);
+      const bv = parseInt((bs||"").trim(),10);
+      if(Number.isNaN(av)||Number.isNaN(bv)) return false;
+      const got = [av,bv].sort((x,y)=>x-y);
+      const exp = [p,q].sort((x,y)=>x-y);
+      return got[0]===exp[0] && got[1]===exp[1];
+    },
+    correctAnswerText: `(x${p>=0?"+"+p:"−"+Math.abs(p)})(x${q>=0?"+"+q:"−"+Math.abs(q)})`,
+  };
+});
+
+function surdAnswerProblem(display, expected){
+  return {
+    question: display,
+    mode:"text",
+    placeholder: expected.radicand===1 ? "例: 7" : "例: 5√3",
+    keys:["0","1","2","3","4","5","6","7","8","9","√","−"],
+    check: (str)=>{ const s=parseSurd(str); return s!==null && surdEqual(s, expected); },
+    correctAnswerText: expected.radicand===1 ? String(expected.coeff) : `${expected.coeff===1?"":expected.coeff===-1?"-":expected.coeff}√${expected.radicand}`,
+  };
+}
+addUnit("g3","g3u3","平方根の計算","根号をふくむ計算をする", function(level){
+  level = level||1;
+  const radicandsSmall = [2,3,5];
+  const radicandsAll = [2,3,5,6,7,10,11];
+  const radicands = level===1 ? radicandsSmall : radicandsAll;
+  const multRange = level===1?4:level===2?6:8;
+  const kinds = level===1 ? ["mul"] : ["addsub","mul","diffsq"];
+  const kind = choice(kinds);
+  if(kind==="addsub"){
+    const d = choice(radicands);
+    const m1 = rnd(1,multRange), m2 = rnd(1,multRange);
+    const isAdd = Math.random()<0.6 || m1<m2 ? true : Math.random()<0.5;
+    const n1 = m1*m1*d, n2 = m2*m2*d;
+    let bigM = m1, smallM = m2, big=n1, small=n2;
+    if(!isAdd && m1<m2){ [bigM,smallM]=[m2,m1]; [big,small]=[n2,n1]; }
+    const op = isAdd ? "+" : "−";
+    const disp = `√${isAdd?n1:big}${op}√${isAdd?n2:small}`;
+    const coeff = isAdd ? m1+m2 : bigM-smallM;
+    return surdAnswerProblem(disp, {coeff, radicand:d});
+  } else if(kind==="mul"){
+    const opts = level===1 ? [2,3,5] : [2,3,5,6,7];
+    const a = choice(opts);
+    const b = choice(opts);
+    const disp = `√${a}×√${b}`;
+    const product = a*b;
+    const simp = simplifySurd(product);
+    return surdAnswerProblem(disp, simp);
+  } else {
+    const a = rnd(2, level===3?12:9);
+    const b = choice(radicands);
+    // (a+√b)(a−√b) = a^2 - b
+    const disp = `(${a}+√${b})(${a}−√${b})`;
+    const answer = a*a - b;
+    return surdAnswerProblem(disp, {coeff:answer, radicand:1});
+  }
+});
+
+function quadAnswerProblem(display, roots){
+  return {
+    question: display + "<span class='small'>x = ?</span>",
+    mode:"text",
+    placeholder:"例: 2,-3 または 1/2,3",
+    keys:["0","1","2","3","4","5","6","7","8","9","−","/",","],
+    check: (str)=>{ const arr = parseMultiRoots(str); return arr!==null && rootsMatch(roots, arr); },
+    correctAnswerText: `x=${formatRoot(roots[0])}, ${formatRoot(roots[1])}`,
+  };
+}
+addUnit("g3","g3u4","二次方程式(因数分解)","因数分解を使って解く", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?9:12;
+  const r1 = rnd(-range,range), r2 = rnd(-range,range);
+  const b = -(r1+r2), c = r1*r2;
+  let disp = "x<sup>2</sup>";
+  if(b!==0) disp += `${b>0?"+"+b:"−"+Math.abs(b)}x`;
+  disp += `${c>0?"+"+c:c<0?"−"+Math.abs(c):""}=0`;
+  return quadAnswerProblem(disp, [r1,r2]);
+});
+addUnit("g3","g3u5","二次方程式(解の公式)","解の公式を使って解く", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?6:8;
+  const a = level===1 ? 1 : (level===2 ? choice([1,1,2]) : choice([1,2,2]));
+  const pick = ()=> (level===1) ? rnd(-range,range) : (Math.random()<0.5 ? rnd(-range,range) : rnd(-range,range)/2);
+  let r1 = pick(), r2 = pick();
+  if(a===1){ r1=Math.round(r1); r2=Math.round(r2); }
+  const b = -a*(r1+r2), c = a*r1*r2;
+  if(Math.abs(b - Math.round(b))>1e-9 || Math.abs(c-Math.round(c))>1e-9){
+    // 保険: 整数化できなければ整数バージョンに差し替え
+    r1 = rnd(-range,range); r2 = rnd(-range,range);
+  }
+  const bb = Math.round(-a*(r1+r2)), cc = Math.round(a*r1*r2);
+  let disp = a===1? "x<sup>2</sup>" : `${a}x<sup>2</sup>`;
+  if(bb!==0) disp += `${bb>0?"+"+bb:"−"+Math.abs(bb)}x`;
+  disp += `${cc>0?"+"+cc:cc<0?"−"+Math.abs(cc):""}=0`;
+  return quadAnswerProblem(disp, [r1,r2]);
+});
+
+/* ===================== ランキング(localStorage) ===================== */
+const LS_KEY = "chugaku_calc_drill_records_v1";
+function loadRecords(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveRecord(key, rec){
+  const all = loadRecords();
+  if(!all[key]) all[key] = [];
+  all[key].push(rec);
+  all[key].sort((a,b)=> b.score-a.score || a.timeSec-b.timeSec);
+  all[key] = all[key].slice(0,10);
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(all)); }catch(e){}
+  return all[key];
+}
+function getRecords(key){
+  const all = loadRecords();
+  return all[key] || [];
+}
+
+/* ===================== 復習リスト(localStorage) ===================== */
+const WRONG_KEY = "chugaku_calc_drill_wrongbook_v1";
+function loadWrongbook(){
+  try{ return JSON.parse(localStorage.getItem(WRONG_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveWrongbook(key, list){
+  const all = loadWrongbook();
+  all[key] = list;
+  try{ localStorage.setItem(WRONG_KEY, JSON.stringify(all)); }catch(e){}
+}
+
+/* ===================== 画面描画 ===================== */
+const app = document.getElementById("app");
+
+function render(){
+  if(STATE.screen==="home") renderHome();
+  else if(STATE.screen==="units") renderUnits();
+  else if(STATE.screen==="setup") renderSetup();
+  else if(STATE.screen==="drill") renderDrill();
+  else if(STATE.screen==="result") renderResult();
+}
+
+function renderHome(){
+  let html = `
+    <div class="card">
+      <h1 class="title">📘 中学計算ドリル</h1>
+      <div class="subtitle">中1〜中3の計算単元をドリル形式で練習しよう</div>
+      <div class="grade-grid">
+  `;
+  GRADES.forEach(g=>{
+    html += `
+      <button class="big-btn ${g.color}" data-grade="${g.id}">
+        <span>${g.name}<small>${g.units.length}単元</small></span>
+        <span class="arrow">›</span>
+      </button>
+    `;
+  });
+  html += `</div></div>`;
+  app.innerHTML = html;
+  app.querySelectorAll("[data-grade]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      STATE.grade = btn.getAttribute("data-grade");
+      STATE.screen = "units";
+      render();
+    });
+  });
+}
+
+function renderUnits(){
+  const g = GRADES.find(g=>g.id===STATE.grade);
+  let html = `
+    <div class="card">
+      <div class="back-row">
+        <button class="back-btn" id="toHome">← 学年選択</button>
+        <span class="crumb">${g.name}</span>
+      </div>
+      <div class="unit-list">
+  `;
+  g.units.forEach(u=>{
+    html += `
+      <button class="unit-btn" data-unit="${u.id}">
+        <span>${u.name}<br><small style="font-weight:400;color:var(--sub)">${u.desc}</small></span>
+      </button>
+    `;
+  });
+  html += `</div></div>`;
+  app.innerHTML = html;
+  document.getElementById("toHome").addEventListener("click", ()=>{ STATE.screen="home"; render(); });
+  app.querySelectorAll("[data-unit]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      STATE.unit = btn.getAttribute("data-unit");
+      STATE.screen = "setup";
+      render();
+    });
+  });
+}
+
+function currentUnitObj(){
+  const g = GRADES.find(g=>g.id===STATE.grade);
+  return g.units.find(u=>u.id===STATE.unit);
+}
+
+function renderSetup(){
+  const g = GRADES.find(g=>g.id===STATE.grade);
+  const u = currentUnitObj();
+  let html = `
+    <div class="card">
+      <div class="back-row">
+        <button class="back-btn" id="toUnits">← 単元選択</button>
+        <span class="crumb">${g.name} / ${u.name}</span>
+      </div>
+      <div class="section-title">レベルを選ぶ</div>
+      <div class="count-row">
+  `;
+  LEVELS.forEach(lv=>{
+    html += `<button class="count-btn level-btn ${STATE.level===lv.id?"selected":""}" data-level="${lv.id}">${lv.label}<small>${lv.sub}</small></button>`;
+  });
+  html += `
+      </div>
+      <div class="section-title">問題数を選ぶ</div>
+      <div class="count-row">
+        <button class="count-btn ${STATE.total===5?"selected":""}" data-count="5">5問</button>
+        <button class="count-btn ${STATE.total===10?"selected":""}" data-count="10">10問</button>
+        <button class="count-btn ${STATE.total===20?"selected":""}" data-count="20">20問</button>
+      </div>
+      <button class="start-btn" id="startBtn">ドリルを始める ▶</button>
+
+      <div class="section-title">この単元・レベルのランキング(自己ベスト上位)</div>
+      ${renderRankTable(unitKey(u.id, STATE.level))}
+    </div>
+  `;
+  app.innerHTML = html;
+  document.getElementById("toUnits").addEventListener("click", ()=>{ STATE.screen="units"; render(); });
+  app.querySelectorAll("[data-level]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      STATE.level = parseInt(btn.getAttribute("data-level"),10);
+      render();
+    });
+  });
+  app.querySelectorAll("[data-count]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      app.querySelectorAll("[data-count]").forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected");
+      STATE.total = parseInt(btn.getAttribute("data-count"),10);
+    });
+  });
+  document.getElementById("startBtn").addEventListener("click", ()=>{
+    startDrill(false);
+  });
+}
+
+function renderRankTable(key){
+  const recs = getRecords(key);
+  if(recs.length===0) return `<div class="hint">まだ記録がありません。挑戦してみよう!</div>`;
+  let html = `<table class="rank"><tr><th>#</th><th>スコア</th><th>時間</th><th>日付</th></tr>`;
+  recs.slice(0,5).forEach((r,i)=>{
+    html += `<tr><td>${i+1}</td><td>${r.score}/${r.total}</td><td>${formatTime(r.timeSec)}</td><td>${r.date}</td></tr>`;
+  });
+  html += `</table>`;
+  return html;
+}
+
+function formatTime(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+
+function startDrill(retry){
+  const u = currentUnitObj();
+  STATE.retryMode = !!retry;
+  if(retry){
+    const wb = loadWrongbook()[unitKey(u.id, STATE.level)] || [];
+    STATE.problems = wb.slice(0, wb.length);
+    STATE.total = STATE.problems.length;
+  } else {
+    STATE.problems = [];
+    for(let i=0;i<STATE.total;i++) STATE.problems.push(u.gen(STATE.level));
+  }
+  STATE.index = 0;
+  STATE.score = 0;
+  STATE.mistakes = [];
+  STATE.startTime = Date.now();
+  STATE._retired = false;
+  STATE.screen = "drill";
+  render();
+}
+
+function renderDrill(){
+  const u = currentUnitObj();
+  const total = STATE.problems.length;
+  const p = STATE.problems[STATE.index];
+  const pct = total>0 ? Math.round((STATE.index/total)*100) : 0;
+
+  let inputHtml = "";
+  if(p.mode==="text"){
+    inputHtml = `
+      <div class="answer-row">
+        <input class="ans-input" id="ansInput" type="text" inputmode="text" autocomplete="off" placeholder="${p.placeholder||""}">
+      </div>
+      <div class="keypad" id="keypad"></div>
+    `;
+  } else if(p.mode==="xy"){
+    inputHtml = `
+      <div class="answer-row">
+        <span class="xy-label">x=</span><input class="ans-input small2" id="ansX" type="text" inputmode="text">
+        <span class="xy-label">y=</span><input class="ans-input small2" id="ansY" type="text" inputmode="text">
+      </div>
+      <div class="keypad" id="keypad"></div>
+    `;
+  } else if(p.mode==="factor"){
+    inputHtml = `
+      <div class="answer-row">
+        <span class="xy-label">(x+</span><input class="ans-input small2" id="ansA" type="text" inputmode="text">
+        <span class="xy-label">)(x+</span><input class="ans-input small2" id="ansB" type="text" inputmode="text">
+        <span class="xy-label">)</span>
+      </div>
+      <div class="keypad" id="keypad"></div>
+      <div class="hint">負の数は "-3" のように入力してください</div>
+    `;
+  }
+
+  const lv = LEVELS.find(l=>l.id===STATE.level);
+  let html = `
+    <div class="card">
+      <div class="drill-header">
+        <span class="crumb">${u.name}${STATE.retryMode ? "(復習)" : ` / ${lv.label}`}</span>
+        <button class="quit-btn" id="quitBtn">✕ やめる</button>
+      </div>
+      <div class="top-stats">
+        <span>問題 ${STATE.index+1}/${total}</span>
+        <span id="timerDisp">⏱ 0:00</span>
+        <span>正解 ${STATE.score}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="question-box">${p.question}</div>
+      ${inputHtml}
+      <div class="feedback" id="feedback"></div>
+    </div>
+  `;
+  app.innerHTML = html;
+
+  // タイマー
+  updateTimer();
+  if(window.__drillTimer) clearInterval(window.__drillTimer);
+  window.__drillTimer = setInterval(updateTimer, 1000);
+
+  document.getElementById("quitBtn").addEventListener("click", ()=>{
+    if(window.confirm("ドリルをやめて、ここまでの結果を見ますか?")){
+      finishDrill(true);
+    }
+  });
+
+  // キーパッド
+  const kp = document.getElementById("keypad");
+  if(kp){
+    let keys;
+    if(p.mode==="text") keys = p.keys;
+    else keys = ["0","1","2","3","4","5","6","7","8","9","−"];
+    keys.forEach(k=>{
+      const b = document.createElement("button");
+      b.className = "key" + (["+","−","/","^2","√",","].includes(k) ? " op" : "");
+      b.textContent = k;
+      b.addEventListener("click", ()=> insertKey(k));
+      kp.appendChild(b);
+    });
+    const del = document.createElement("button");
+    del.className = "key del"; del.textContent = "⌫";
+    del.addEventListener("click", ()=> insertKey("DEL"));
+    kp.appendChild(del);
+    const ent = document.createElement("button");
+    ent.className = "key enter"; ent.textContent = "けってい";
+    ent.addEventListener("click", submitAnswer);
+    kp.appendChild(ent);
+  }
+
+  const firstInput = document.getElementById("ansInput") || document.getElementById("ansX") || document.getElementById("ansA");
+  if(firstInput){
+    firstInput.focus();
+    firstInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") submitAnswer(); });
+  }
+  const otherInputs = [document.getElementById("ansY"), document.getElementById("ansB")].filter(Boolean);
+  otherInputs.forEach(inp=> inp.addEventListener("keydown", (e)=>{ if(e.key==="Enter") submitAnswer(); }));
+}
+
+function activeInput(){
+  return document.activeElement && document.activeElement.tagName==="INPUT" ? document.activeElement
+    : (document.getElementById("ansInput") || document.getElementById("ansX") || document.getElementById("ansA"));
+}
+function insertKey(k){
+  const inp = activeInput();
+  if(!inp) return;
+  if(k==="DEL"){
+    const pos = inp.selectionStart;
+    if(pos>0){
+      inp.value = inp.value.slice(0,pos-1) + inp.value.slice(pos);
+      inp.setSelectionRange(pos-1,pos-1);
+    }
+  } else {
+    const symbol = k==="−" ? "-" : k;
+    const pos = inp.selectionStart;
+    inp.value = inp.value.slice(0,pos) + symbol + inp.value.slice(pos);
+    const newPos = pos + symbol.length;
+    inp.setSelectionRange(newPos,newPos);
+  }
+  inp.focus();
+}
+
+function updateTimer(){
+  const el = document.getElementById("timerDisp");
+  if(!el) return;
+  const sec = Math.floor((Date.now()-STATE.startTime)/1000);
+  el.textContent = "⏱ " + formatTime(sec);
+}
+
+function submitAnswer(){
+  const p = STATE.problems[STATE.index];
+  let ok = false;
+  let givenText = "";
+  if(p.mode==="text"){
+    const v = document.getElementById("ansInput").value;
+    givenText = v;
+    ok = p.check(v);
+  } else if(p.mode==="xy"){
+    const x = document.getElementById("ansX").value;
+    const y = document.getElementById("ansY").value;
+    givenText = `x=${x}, y=${y}`;
+    ok = p.check(x,y);
+  } else if(p.mode==="factor"){
+    const a = document.getElementById("ansA").value;
+    const b = document.getElementById("ansB").value;
+    givenText = `(x+${a})(x+${b})`;
+    ok = p.check(a,b);
+  }
+
+  const fb = document.getElementById("feedback");
+  if(ok){
+    STATE.score++;
+    fb.textContent = "○ せいかい!";
+    fb.className = "feedback ok";
+    playCorrect();
+  } else {
+    fb.textContent = "× ちがうよ… 正解: " + p.correctAnswerText;
+    fb.className = "feedback no";
+    playWrong();
+    STATE.mistakes.push({problem:p, given: givenText});
+  }
+  disableInputs();
+  setTimeout(()=>{
+    STATE.index++;
+    if(STATE.index >= STATE.problems.length){
+      finishDrill(false);
+    } else {
+      render();
+    }
+  }, ok ? 700 : 1400);
+}
+
+function disableInputs(){
+  document.querySelectorAll(".ans-input").forEach(i=> i.disabled=true);
+  document.querySelectorAll(".key").forEach(k=> k.disabled=true);
+  const qb = document.getElementById("quitBtn");
+  if(qb) qb.disabled = true;
+}
+
+function finishDrill(retired){
+  if(window.__drillTimer) clearInterval(window.__drillTimer);
+  const u = currentUnitObj();
+  const key = unitKey(u.id, STATE.level);
+  const timeSec = Math.floor((Date.now()-STATE.startTime)/1000);
+  const attemptedTotal = retired ? STATE.index : STATE.problems.length;
+
+  // 間違えた問題を復習リストとして保存(このセッションの間違いのみ)
+  saveWrongbook(key, STATE.mistakes.map(m=>m.problem));
+
+  let isNewRecord = false;
+  if(!STATE.retryMode && !retired && attemptedTotal>0){
+    const before = getRecords(key);
+    const bestBefore = before.length ? before[0] : null;
+    const rec = {score:STATE.score, total:attemptedTotal, timeSec, date: new Date().toLocaleDateString("ja-JP")};
+    saveRecord(key, rec);
+    isNewRecord = !bestBefore || rec.score>bestBefore.score || (rec.score===bestBefore.score && rec.timeSec<bestBefore.timeSec);
+    if(isNewRecord) playClear();
+  }
+  STATE._lastNewRecord = isNewRecord;
+  STATE._lastTimeSec = timeSec;
+  STATE._retired = !!retired;
+  STATE._attemptedTotal = attemptedTotal;
+  STATE.screen = "result";
+  render();
+}
+
+function renderResult(){
+  const u = currentUnitObj();
+  const total = STATE._attemptedTotal;
+  const lv = LEVELS.find(l=>l.id===STATE.level);
+  let html = `
+    <div class="card">
+      <div class="crumb" style="text-align:center;display:block;">${u.name} / ${lv.label}${STATE.retryMode?"(復習モード)":""}</div>
+      ${STATE._retired ? `<div class="retired-note">⏸ 途中でやめました</div>` : ""}
+      <div class="result-score">${STATE.score} / ${total}</div>
+      <div class="result-sub">かかった時間: ${formatTime(STATE._lastTimeSec)}</div>
+      ${STATE._lastNewRecord ? `<span class="newrecord">🏆 自己ベスト更新!</span>` : ""}
+  `;
+  if(STATE.mistakes.length>0){
+    html += `<div class="section-title">まちがえた問題(${STATE.mistakes.length}問)</div><div class="miss-list">`;
+    STATE.mistakes.forEach(m=>{
+      html += `
+        <div class="miss-item">
+          <div class="q">${m.problem.question.replace(/<[^>]+>/g," ")}</div>
+          <div class="a"><span class="wrong">${escapeHtml(m.given||"(未入力)")}</span> → <b>${m.problem.correctAnswerText}</b></div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  } else if(total>0){
+    html += `<div class="hint" style="margin:16px 0;">パーフェクト!🎉</div>`;
+  }
+  html += `
+      <div class="btn-row">
+        <button class="btn-ghost" id="toUnits2">単元選択へ</button>
+        <button class="btn-primary" id="retrySame">もう一度</button>
+      </div>
+      ${STATE.mistakes.length>0 ? `<div class="btn-row"><button class="btn-primary" id="retryMiss" style="width:100%">間違えた問題だけ復習する</button></div>` : ""}
+
+      <div class="section-title">ランキング</div>
+      ${renderRankTable(unitKey(u.id, STATE.level))}
+    </div>
+  `;
+  app.innerHTML = html;
+  document.getElementById("toUnits2").addEventListener("click", ()=>{ STATE.screen="units"; render(); });
+  document.getElementById("retrySame").addEventListener("click", ()=> startDrill(false));
+  const rm = document.getElementById("retryMiss");
+  if(rm) rm.addEventListener("click", ()=> startDrill(true));
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+render();
+})();
+</script>
+</body>
+</html>
