@@ -854,7 +854,9 @@ function quadAnswerProblem(display, roots){
     placeholder:"例: 2,-3 または 1/2,3",
     keys:["0","1","2","3","4","5","6","7","8","9","−","/",","],
     check: (str)=>{ const arr = parseMultiRoots(str); return arr!==null && rootsMatch(roots, arr); },
-    correctAnswerText: `x=${formatRoot(roots[0])}, ${formatRoot(roots[1])}`,
+    correctAnswerText: Math.abs(roots[0]-roots[1])<1e-9
+      ? `x=${formatRoot(roots[0])}(重解)`
+      : `x=${formatRoot(roots[0])}, ${formatRoot(roots[1])}`,
   };
 }
 addUnit("g3","g3u4","二次方程式(因数分解)","因数分解を使って解く", function(level){
@@ -1163,6 +1165,13 @@ function renderDrill(){
     }
   });
 
+  // 入力欄がタップされたら、どの欄に入力中かを記録しておく
+  // (キーパッドのボタンをタップした瞬間にブラウザがボタンへ
+  //  フォーカスを移すことがあるため、document.activeElementだけに頼らない)
+  document.querySelectorAll(".ans-input").forEach(inp=>{
+    inp.addEventListener("focus", ()=>{ lastAnswerInputId = inp.id; });
+  });
+
   // キーパッド
   const kp = document.getElementById("keypad");
   if(kp){
@@ -1173,18 +1182,15 @@ function renderDrill(){
       const b = document.createElement("button");
       b.className = "key" + (["+","−","/","^2","√",","].includes(k) ? " op" : "");
       b.textContent = k;
-      preventFocusSteal(b);
       b.addEventListener("click", ()=> insertKey(k));
       kp.appendChild(b);
     });
     const del = document.createElement("button");
     del.className = "key del"; del.textContent = "⌫";
-    preventFocusSteal(del);
     del.addEventListener("click", ()=> insertKey("DEL"));
     kp.appendChild(del);
     const ent = document.createElement("button");
     ent.className = "key enter"; ent.textContent = "けってい";
-    preventFocusSteal(ent);
     ent.addEventListener("click", submitAnswer);
     kp.appendChild(ent);
   }
@@ -1192,25 +1198,20 @@ function renderDrill(){
   const firstInput = document.getElementById("ansInput") || document.getElementById("ansX") || document.getElementById("ansA");
   if(firstInput){
     firstInput.focus();
+    lastAnswerInputId = firstInput.id;
     firstInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") submitAnswer(); });
   }
   const otherInputs = [document.getElementById("ansY"), document.getElementById("ansB")].filter(Boolean);
   otherInputs.forEach(inp=> inp.addEventListener("keydown", (e)=>{ if(e.key==="Enter") submitAnswer(); }));
 }
 
-// キーパッドのボタンをタップしても、入力欄からフォーカスが外れないようにする
-// (mousedown/pointerdownの既定動作でボタンにフォーカスが移ると、
-//  どちらの入力欄に入力すべきか分からなくなってしまうため)
-function preventFocusSteal(el){
-  const keepFocus = (e)=> e.preventDefault();
-  el.addEventListener("mousedown", keepFocus);
-  el.addEventListener("pointerdown", keepFocus);
-  el.addEventListener("touchstart", keepFocus, {passive:false});
-}
-
+let lastAnswerInputId = null;
 function activeInput(){
-  return document.activeElement && document.activeElement.tagName==="INPUT" ? document.activeElement
-    : (document.getElementById("ansInput") || document.getElementById("ansX") || document.getElementById("ansA"));
+  const el = document.activeElement;
+  if(el && el.tagName==="INPUT" && el.classList.contains("ans-input")) return el;
+  const cached = lastAnswerInputId && document.getElementById(lastAnswerInputId);
+  if(cached) return cached;
+  return document.getElementById("ansInput") || document.getElementById("ansX") || document.getElementById("ansA");
 }
 function insertKey(k){
   const inp = activeInput();
