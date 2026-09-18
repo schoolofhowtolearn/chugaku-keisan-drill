@@ -124,8 +124,8 @@
   .crumb{font-size:13px; color:var(--sub); font-weight:600;}
 
   .count-row{display:flex; gap:10px; margin-top:6px;}
-  .count-row.wrap{flex-wrap:wrap;}
-  .count-row.wrap .count-btn{flex:1 1 calc(25% - 8px); min-width:64px;}
+  .count-row.wrap{display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;}
+  .count-row.wrap .count-btn{min-width:0;}
   .count-btn{
     flex:1; padding:14px 0; border-radius:12px; border:2px solid #e6e9f5;
     background:#fff; font-weight:700; font-size:15px; cursor:pointer; color:var(--ink);
@@ -452,13 +452,10 @@ const STATE = {
 };
 const TIME_LIMITS = [
   {sec:0, label:"なし", sub:"制限なし"},
-  {sec:5, label:"5秒", sub:""},
-  {sec:10, label:"10秒", sub:""},
-  {sec:15, label:"15秒", sub:""},
-  {sec:20, label:"20秒", sub:""},
-  {sec:25, label:"25秒", sub:""},
-  {sec:30, label:"30秒", sub:""},
 ];
+for(let t=5; t<=60; t+=5){
+  TIME_LIMITS.push({sec:t, label:t+"秒", sub:""});
+}
 
 /* ===================== 単元定義 ===================== */
 const GRADES = [
