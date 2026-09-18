@@ -1096,23 +1096,23 @@ function renderDrill(){
   if(p.mode==="text"){
     inputHtml = `
       <div class="answer-row">
-        <input class="ans-input" id="ansInput" type="text" inputmode="text" autocomplete="off" placeholder="${p.placeholder||""}">
+        <input class="ans-input" id="ansInput" type="text" inputmode="none" readonly autocomplete="off" placeholder="${p.placeholder||""}">
       </div>
       <div class="keypad" id="keypad"></div>
     `;
   } else if(p.mode==="xy"){
     inputHtml = `
       <div class="answer-row">
-        <span class="xy-label">x=</span><input class="ans-input small2" id="ansX" type="text" inputmode="text">
-        <span class="xy-label">y=</span><input class="ans-input small2" id="ansY" type="text" inputmode="text">
+        <span class="xy-label">x=</span><input class="ans-input small2" id="ansX" type="text" inputmode="none" readonly>
+        <span class="xy-label">y=</span><input class="ans-input small2" id="ansY" type="text" inputmode="none" readonly>
       </div>
       <div class="keypad" id="keypad"></div>
     `;
   } else if(p.mode==="factor"){
     inputHtml = `
       <div class="answer-row">
-        <span class="xy-label">(x+</span><input class="ans-input small2" id="ansA" type="text" inputmode="text">
-        <span class="xy-label">)(x+</span><input class="ans-input small2" id="ansB" type="text" inputmode="text">
+        <span class="xy-label">(x+</span><input class="ans-input small2" id="ansA" type="text" inputmode="none" readonly>
+        <span class="xy-label">)(x+</span><input class="ans-input small2" id="ansB" type="text" inputmode="none" readonly>
         <span class="xy-label">)</span>
       </div>
       <div class="keypad" id="keypad"></div>
@@ -1173,15 +1173,18 @@ function renderDrill(){
       const b = document.createElement("button");
       b.className = "key" + (["+","−","/","^2","√",","].includes(k) ? " op" : "");
       b.textContent = k;
+      preventFocusSteal(b);
       b.addEventListener("click", ()=> insertKey(k));
       kp.appendChild(b);
     });
     const del = document.createElement("button");
     del.className = "key del"; del.textContent = "⌫";
+    preventFocusSteal(del);
     del.addEventListener("click", ()=> insertKey("DEL"));
     kp.appendChild(del);
     const ent = document.createElement("button");
     ent.className = "key enter"; ent.textContent = "けってい";
+    preventFocusSteal(ent);
     ent.addEventListener("click", submitAnswer);
     kp.appendChild(ent);
   }
@@ -1193,6 +1196,16 @@ function renderDrill(){
   }
   const otherInputs = [document.getElementById("ansY"), document.getElementById("ansB")].filter(Boolean);
   otherInputs.forEach(inp=> inp.addEventListener("keydown", (e)=>{ if(e.key==="Enter") submitAnswer(); }));
+}
+
+// キーパッドのボタンをタップしても、入力欄からフォーカスが外れないようにする
+// (mousedown/pointerdownの既定動作でボタンにフォーカスが移ると、
+//  どちらの入力欄に入力すべきか分からなくなってしまうため)
+function preventFocusSteal(el){
+  const keepFocus = (e)=> e.preventDefault();
+  el.addEventListener("mousedown", keepFocus);
+  el.addEventListener("pointerdown", keepFocus);
+  el.addEventListener("touchstart", keepFocus, {passive:false});
 }
 
 function activeInput(){
