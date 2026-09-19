@@ -559,21 +559,27 @@ addUnit("g1","g1u3","四則混合(累乗を含む)","かっこ・累乗をふく
 addUnit("g1","g1u4","文字式の計算(項の整理)","同じ項をまとめる", function(level){
   level = level||1;
   const range = level===1?6:level===2?9:12;
-  const n = level===1 ? 3 : (level===2 ? choice([3,3,4]) : choice([4,4,5]));
-  let cx=0, ck=0;
+  const useY = level===3; // レベル3はxとy、2種類の文字が混ざった項を同時に整理する
+  const n = level===1 ? 3 : (level===2 ? choice([3,3,4]) : choice([5,6,7]));
+  let cx=0, cy=0, ck=0;
   const parts=[];
   for(let i=0;i<n;i++){
-    if(Math.random()<0.6){
-      const c = rndNonZero(-range,range);
-      cx += c; parts.push({c, isX:true});
+    const c = rndNonZero(-range,range);
+    const r = Math.random();
+    if(useY && r<0.32){
+      cy += c; parts.push({c, kind:"y"});
+    } else if(r < (useY?0.72:0.6)){
+      cx += c; parts.push({c, kind:"x"});
     } else {
-      const c = rndNonZero(-range,range);
-      ck += c; parts.push({c, isX:false});
+      ck += c; parts.push({c, kind:"const"});
     }
   }
   let s="";
   parts.forEach((p,i)=>{
-    const val = p.isX ? (p.c===1?"x":p.c===-1?"-x":`${p.c}x`) : `${p.c}`;
+    let val;
+    if(p.kind==="x") val = p.c===1?"x":p.c===-1?"-x":`${p.c}x`;
+    else if(p.kind==="y") val = p.c===1?"y":p.c===-1?"-y":`${p.c}y`;
+    else val = `${p.c}`;
     if(i===0){ s += val; }
     else { s += (val[0]==="-") ? val : "+"+val; }
   });
@@ -581,19 +587,22 @@ addUnit("g1","g1u4","文字式の計算(項の整理)","同じ項をまとめる
   return {
     question: s,
     mode:"text",
-    placeholder:"例: 2x+7",
-    keys:["0","1","2","3","4","5","6","7","8","9","x","+","−"],
-    check: (str)=>{ const p=parsePoly(str); return p!==null && p.x===cx && p.const===ck && p.x2===0 && p.y===0 && p.y2===0; },
-    correctAnswerText: polyToDisplay({const:ck, x:cx, x2:0, y:0, y2:0}),
+    placeholder: useY ? "例: 2x−3y+7" : "例: 2x+7",
+    keys: useY
+      ? ["0","1","2","3","4","5","6","7","8","9","x","y","+","−"]
+      : ["0","1","2","3","4","5","6","7","8","9","x","+","−"],
+    check: (str)=>{ const p=parsePoly(str); return p!==null && p.x===cx && p.const===ck && p.x2===0 && p.y===cy && p.y2===0; },
+    correctAnswerText: polyToDisplay({const:ck, x:cx, x2:0, y:cy, y2:0}),
   };
 });
 
 function polyAnswerProblem(display, expectedPoly){
+  const needsY = !!(expectedPoly.y || expectedPoly.y2);
   return {
     question: display,
     mode:"text",
-    placeholder:"例: -6x+15",
-    keys:["0","1","2","3","4","5","6","7","8","9","x","^2","+","−"],
+    placeholder: needsY ? "例: -6x+2y+15" : "例: -6x+15",
+    keys:["0","1","2","3","4","5","6","7","8","9","x","y","^2","+","−"],
     check: (str)=>{ const p=parsePoly(str); return p!==null && polyEqual(p, expectedPoly); },
     correctAnswerText: polyToDisplay(expectedPoly),
   };
@@ -602,7 +611,10 @@ function polyAnswerProblem(display, expectedPoly){
 addUnit("g1","g1u5","文字式の計算(乗法・除法)","1次式のかけ算・わり算", function(level){
   level = level||1;
   const range = level===1?6:level===2?9:12;
-  const kind = level===1 ? "dist" : choice(["mul","div","dist"]);
+  const kindOpts = level===1 ? ["dist"]
+    : level===2 ? ["mul","div","dist"]
+    : ["mul","div","dist","dist2var","combine2"]; // レベル3: 2種類の文字の分配、2項の分配+同類項整理
+  const kind = choice(kindOpts);
   if(kind==="mul"){
     const c = rndNonZero(-range,range), k = rndNonZero(-range,range);
     const cx = c*k;
@@ -614,11 +626,30 @@ addUnit("g1","g1u5","文字式の計算(乗法・除法)","1次式のかけ算�
     const dividend = cx0*k;
     const disp = `${dividend}x÷${fmtP(k)}`.replace(/-/g,"−");
     return polyAnswerProblem(disp, {const:0,x:cx0,x2:0,y:0,y2:0});
-  } else {
+  } else if(kind==="dist"){
     const a = rndNonZero(-range,range), b = rndNonZero(-range,range), c = rndNonZero(-range,range);
     const cx = a*b, ck = a*c;
     const disp = `${a}(${b}x${c>=0?"+"+c:"−"+Math.abs(c)})`.replace(/^−/,"−").replace(/(\d)\(/,"$1(");
     return polyAnswerProblem(disp.replace(/-/g,"−"), {const:ck,x:cx,x2:0,y:0,y2:0});
+  } else if(kind==="dist2var"){
+    // a(bx+cy) 形式: xとyの2種類の文字を同時に分配する
+    const a = rndNonZero(-6,6), b = rndNonZero(-range,range), c = rndNonZero(-range,range);
+    const cx = a*b, cy = a*c;
+    const disp = `${a}(${b}x${c>=0?"+"+c:"−"+Math.abs(c)}y)`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:0,x:cx,x2:0,y:cy,y2:0});
+  } else {
+    // combine2: a(bx+c)±d(ex+f) 形式: 2つの分配を展開してから同類項をまとめる
+    // (dは常に正にして、符号は+/−の演算子だけで表す。dも負にすると「−(−4)」のような
+    //  二重符号の表示になってしまうため)
+    const a = rndNonZero(-6,6), b = rndNonZero(-range,range), c = rndNonZero(-range,range);
+    const d = rnd(1,6), e = rndNonZero(-range,range), f = rndNonZero(-range,range);
+    const isAdd = Math.random()<0.5;
+    const cx = isAdd ? a*b + d*e : a*b - d*e;
+    const ck = isAdd ? a*c + d*f : a*c - d*f;
+    const t1 = `${a}(${b}x${c>=0?"+"+c:"−"+Math.abs(c)})`;
+    const t2 = `${d}(${e}x${f>=0?"+"+f:"−"+Math.abs(f)})`;
+    const disp = `${t1}${isAdd?"+":"−"}${t2}`.replace(/-/g,"−");
+    return polyAnswerProblem(disp, {const:ck,x:cx,x2:0,y:0,y2:0});
   }
 });
 
