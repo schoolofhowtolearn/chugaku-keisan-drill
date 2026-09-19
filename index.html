@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>中学計算ドリル 1・2・3年</title>
+<title>中学数学ドリル 1・2・3年</title>
 <style>
   :root{
     --bg1:#eef4ff;
@@ -191,6 +191,7 @@
   .question-box .small{font-size:16px; font-weight:500; color:var(--sub); display:block; margin-top:4px;}
   .question-box .eq1{display:block;}
   .question-box .eq2{font-size:26px; font-weight:700; display:block; margin-top:8px;}
+  .question-box .qtext{display:block; font-size:18px; font-weight:600; line-height:1.6; text-align:left;}
 
   .answer-row{display:flex; gap:8px; margin-bottom:12px; align-items:center; justify-content:center;}
   .ans-input{
@@ -888,6 +889,377 @@ addUnit("g3","g3u5","二次方程式(解の公式)","解の公式を使って解
   return quadAnswerProblem(disp, [r1,r2]);
 });
 
+/* ===================== 追加単元(関数・図形・データの活用・文章題) ===================== */
+
+// 円周率πをふくむ答え(○○π)用のヘルパー
+function parsePi(str){
+  if(typeof str!=="string") return null;
+  const s = str.trim();
+  if(s==="") return null;
+  const m = s.match(/^([+-]?\d*)\s*π$/);
+  if(!m) return null;
+  let coeffStr = m[1];
+  if(coeffStr===""||coeffStr==="+") coeffStr = "1";
+  if(coeffStr==="-") coeffStr = "-1";
+  const coeff = parseInt(coeffStr,10);
+  if(Number.isNaN(coeff)) return null;
+  return coeff;
+}
+function piAnswerProblem(display, coeff){
+  return {
+    question: display,
+    mode:"text",
+    placeholder:"例: 12π",
+    keys:["0","1","2","3","4","5","6","7","8","9","π"],
+    check: (str)=>{ const c=parsePi(str); return c!==null && c===coeff; },
+    correctAnswerText: `${coeff}π`,
+  };
+}
+
+// 分数(または整数)で答える問題用のヘルパー(確率・比例定数など)
+function fracAnswerProblem(display, numer, denom, opts){
+  opts = opts || {};
+  denom = denom || 1;
+  if(denom < 0){ numer = -numer; denom = -denom; }
+  const g = gcd(numer, denom) || 1;
+  const rn = numer/g, rd = denom/g;
+  const text = rd===1 ? String(rn) : `${rn}/${rd}`;
+  const val = numer/denom;
+  return {
+    question: display,
+    mode:"text",
+    placeholder: opts.placeholder || "例: 3 または 2/5",
+    keys: opts.keys || ["0","1","2","3","4","5","6","7","8","9","−","/"],
+    check: (s)=>{ const v = parseFractionToken((s||"").trim()); return v!==null && Math.abs(v-val) < 1e-9; },
+    correctAnswerText: text,
+  };
+}
+
+// 文章題などで自由な問題文からx=◯, y=◯の形で答える問題用のヘルパー
+function xyProblemFreeform(displayHtml, x0, y0){
+  return {
+    question: displayHtml,
+    mode:"xy",
+    check: (xs,ys)=>{
+      const xv = parseFractionToken((xs||"").trim());
+      const yv = parseFractionToken((ys||"").trim());
+      return xv!==null && yv!==null && Math.abs(xv-x0)<1e-9 && Math.abs(yv-y0)<1e-9;
+    },
+    correctAnswerText: `x=${x0}, y=${y0}`,
+  };
+}
+
+function fmtLinear(a,b){
+  let s = a===1 ? "x" : a===-1 ? "−x" : `${a}x`;
+  if(b>0) s += `+${b}`;
+  else if(b<0) s += `−${Math.abs(b)}`;
+  return s;
+}
+function fmtAx2(a){
+  if(a===1) return "x<sup>2</sup>";
+  if(a===-1) return "−x<sup>2</sup>";
+  return `${a}x<sup>2</sup>`;
+}
+
+/* ---- 中学1年(関数・図形・データ・文章題) ---- */
+addUnit("g1","g1u7","比例・反比例","yはxに比例・反比例する関係を利用する", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?9:12;
+  const isProp = Math.random() < 0.5;
+  const askX = Math.random() < 0.5; // true: xを求める / false: yを求める
+  if(isProp){
+    const a = rndNonZero(-range,range);
+    const x0 = rndNonZero(1, level===1?6:9);
+    const y0 = a*x0;
+    const x1 = rndNonZero(-9,9);
+    const y1 = a*x1;
+    if(askX){
+      const display = `<span class="qtext">yはxに比例し、x=${x0}のときy=${y0}です。y=${y1}のときのxの値を求めなさい。</span>`;
+      return numAnswerProblem(display, x1);
+    } else {
+      const display = `<span class="qtext">yはxに比例し、x=${x0}のときy=${y0}です。x=${x1}のときのyの値を求めなさい。</span>`;
+      return numAnswerProblem(display, y1);
+    }
+  } else {
+    const p = rndNonZero(1,range), q = rndNonZero(1,range);
+    const signA = choice([1,-1]);
+    const a = signA*p*q;
+    const x0Sign = choice([1,-1]);
+    const x0 = x0Sign*p;
+    const y0 = a/x0;
+    const x1Sign = choice([1,-1]);
+    const x1 = x1Sign*q;
+    const y1 = a/x1;
+    if(askX){
+      const display = `<span class="qtext">yはxに反比例し、x=${x0}のときy=${y0}です。y=${y1}のときのxの値を求めなさい。</span>`;
+      return numAnswerProblem(display, x1);
+    } else {
+      const display = `<span class="qtext">yはxに反比例し、x=${x0}のときy=${y0}です。x=${x1}のときのyの値を求めなさい。</span>`;
+      return numAnswerProblem(display, y1);
+    }
+  }
+});
+
+addUnit("g1","g1u8","図形の計量(円・立体)","円・おうぎ形・角柱円柱の周や体積を求める", function(level){
+  level = level||1;
+  const range = level===1?[2,6]:level===2?[3,9]:[4,12];
+  const kind = choice(["circumference","area","prism","cylinder"]);
+  if(kind==="circumference"){
+    const r = rnd(range[0],range[1]);
+    const display = `<span class="qtext">半径${r}cmの円の周の長さを求めなさい。(円周率はπとします)</span>`;
+    return piAnswerProblem(display, 2*r);
+  } else if(kind==="area"){
+    const r = rnd(range[0],range[1]);
+    const display = `<span class="qtext">半径${r}cmの円の面積を求めなさい。(円周率はπとします)</span>`;
+    return piAnswerProblem(display, r*r);
+  } else if(kind==="prism"){
+    const a = rnd(range[0],range[1]), b = rnd(range[0],range[1]), c = rnd(range[0],range[1]);
+    const display = `<span class="qtext">たて${a}cm、よこ${b}cm、高さ${c}cmの直方体の体積を求めなさい。</span>`;
+    return numAnswerProblem(display, a*b*c);
+  } else {
+    const r = rnd(range[0],range[1]);
+    const h = rnd(range[0],range[1]);
+    const display = `<span class="qtext">底面の半径${r}cm、高さ${h}cmの円柱の体積を求めなさい。(円周率はπとします)</span>`;
+    return piAnswerProblem(display, r*r*h);
+  }
+});
+
+addUnit("g1","g1u9","データの活用(代表値)","平均値・中央値・最頻値を求める", function(level){
+  level = level||1;
+  const hi = level===1?20:level===2?50:100;
+  const m = rnd(0,hi);
+  const others = [];
+  while(others.length<3){
+    const v = rnd(0,hi);
+    if(v!==m && !others.includes(v)) others.push(v);
+  }
+  const data = [m,m,...others];
+  const shuffled = [...data].sort(()=>Math.random()-0.5);
+  const sorted = [...data].sort((a,b)=>a-b);
+  const median = sorted[2];
+  const sum = data.reduce((a,b)=>a+b,0);
+  const mean = sum/5;
+  const kind = choice(["mean","median","mode"]);
+  const listStr = shuffled.join(", ");
+  if(kind==="mean"){
+    const display = `<span class="qtext">次の5つのデータの平均値を求めなさい。<span class="small">${listStr}</span></span>`;
+    return {
+      question: display,
+      mode:"text",
+      placeholder:"例: 7.4",
+      keys:["0","1","2","3","4","5","6","7","8","9","."],
+      check: (s)=>{ const v=parseFractionToken((s||"").trim()); return v!==null && Math.abs(v-mean)<1e-9; },
+      correctAnswerText: Number.isInteger(mean) ? String(mean) : mean.toFixed(1),
+    };
+  } else if(kind==="median"){
+    const display = `<span class="qtext">次の5つのデータの中央値(メジアン)を求めなさい。<span class="small">${listStr}</span></span>`;
+    return numAnswerProblem(display, median);
+  } else {
+    const display = `<span class="qtext">次の5つのデータの最頻値(モード)を求めなさい。<span class="small">${listStr}</span></span>`;
+    return numAnswerProblem(display, m);
+  }
+});
+
+addUnit("g1","g1u10","方程式の文章題","文章から式をつくって答えを求める", function(level){
+  level = level||1;
+  const hi = level===1?10:level===2?15:20;
+  const kind = choice(["abstract","price"]);
+  if(kind==="abstract"){
+    const x0 = rndNonZero(1,hi) * choice([1,-1]);
+    const a = rnd(2,9);
+    const b = rnd(-10,10);
+    const total = a*x0+b;
+    let display;
+    if(b>0) display = `<span class="qtext">ある数xを${a}倍して${b}を足すと、${total}になりました。xの値を求めなさい。</span>`;
+    else if(b<0) display = `<span class="qtext">ある数xを${a}倍して${Math.abs(b)}を引くと、${total}になりました。xの値を求めなさい。</span>`;
+    else display = `<span class="qtext">ある数xを${a}倍すると、${total}になりました。xの値を求めなさい。</span>`;
+    return numAnswerProblem(display, x0);
+  } else {
+    const p = rnd(50,300);
+    const n = rnd(Math.max(2,Math.floor(hi/3)), hi);
+    const total = p*n;
+    if(Math.random()<0.5){
+      const display = `<span class="qtext">1個${p}円の品物を何個か買ったところ、代金の合計は${total}円でした。何個買いましたか。</span>`;
+      return numAnswerProblem(display, n);
+    } else {
+      const display = `<span class="qtext">同じ値段の品物を${n}個買ったところ、代金の合計は${total}円でした。1個の値段を求めなさい。</span>`;
+      return numAnswerProblem(display, p);
+    }
+  }
+});
+
+/* ---- 中学2年(関数・図形・データ・文章題) ---- */
+addUnit("g2","g2u5","一次関数","yの値・xの値・変化の割合を求める", function(level){
+  level = level||1;
+  const range = level===1?6:level===2?9:12;
+  const a = rndNonZero(-range,range);
+  const b = rnd(-range,range);
+  const kind = choice(["value","inverse","rate"]);
+  const fdisp = `y=${fmtLinear(a,b)}`;
+  if(kind==="value"){
+    const x = rnd(-range,range);
+    const y = a*x+b;
+    const display = `<span class="qtext">一次関数 ${fdisp} について、x=${x}のときのyの値を求めなさい。</span>`;
+    return numAnswerProblem(display, y);
+  } else if(kind==="inverse"){
+    const x0 = rnd(-range,range);
+    const y0 = a*x0+b;
+    const display = `<span class="qtext">一次関数 ${fdisp} について、y=${y0}のときのxの値を求めなさい。</span>`;
+    return numAnswerProblem(display, x0);
+  } else {
+    let x1 = rnd(-range,range);
+    let x2 = rnd(-range,range);
+    while(x2===x1) x2 = rnd(-range,range);
+    const display = `<span class="qtext">一次関数 ${fdisp} について、xの値が${x1}から${x2}まで増加するときの変化の割合を求めなさい。</span>`;
+    return numAnswerProblem(display, a);
+  }
+});
+
+addUnit("g2","g2u6","図形の角度","平行線の角・多角形の内角を求める", function(level){
+  level = level||1;
+  const kind = choice(["parallel","polygonSum","regularInterior"]);
+  if(kind==="parallel"){
+    const x = rnd(20,160);
+    const same = Math.random()<0.5;
+    const display = same
+      ? `<span class="qtext">2本の平行線が1本の直線と交わっています。一方の角が${x}°のとき、その同位角の大きさを求めなさい。</span>`
+      : `<span class="qtext">2本の平行線が1本の直線と交わっています。一方の角が${x}°のとき、その錯角の大きさを求めなさい。</span>`;
+    return numAnswerProblem(display, x);
+  } else if(kind==="polygonSum"){
+    const nOpts = level===1?[3,4,5,6]:level===2?[5,6,7,8]:[7,8,9,10,12];
+    const n = choice(nOpts);
+    const sum = 180*(n-2);
+    const display = `<span class="qtext">${n}角形の内角の和を求めなさい。</span>`;
+    return numAnswerProblem(display, sum);
+  } else {
+    const nOpts = [3,4,5,6,8,9,10,12];
+    const n = choice(nOpts);
+    const ans = 180*(n-2)/n;
+    const display = `<span class="qtext">正${n}角形の1つの内角の大きさを求めなさい。</span>`;
+    return numAnswerProblem(display, ans);
+  }
+});
+
+addUnit("g2","g2u7","確率","さいころ・玉の確率を求める(分数で解答)", function(level){
+  level = level||1;
+  const kind = choice(level===1 ? ["dice1","balls"] : ["dice1","dice2","balls"]);
+  if(kind==="dice1"){
+    const events = [
+      {desc:"1の目が出る", num:1},
+      {desc:"偶数の目が出る", num:3},
+      {desc:"奇数の目が出る", num:3},
+      {desc:"3の倍数の目が出る", num:2},
+      {desc:"4以上の目が出る", num:3},
+    ];
+    const e = choice(events);
+    const display = `<span class="qtext">1個のさいころを1回投げるとき、${e.desc}確率を求めなさい。</span>`;
+    return fracAnswerProblem(display, e.num, 6);
+  } else if(kind==="dice2"){
+    const counts = [0,0,1,2,3,4,5,6,5,4,3,2,1];
+    const s = rnd(2,12);
+    const cnt = counts[s];
+    const display = `<span class="qtext">2個のさいころを同時に投げるとき、出た目の和が${s}になる確率を求めなさい。</span>`;
+    return fracAnswerProblem(display, cnt, 36);
+  } else {
+    const red = rnd(1, level===1?4:level===2?6:8);
+    const white = rnd(1, level===1?4:level===2?6:8);
+    const display = `<span class="qtext">赤玉${red}個、白玉${white}個が入った袋から玉を1個取り出すとき、赤玉が出る確率を求めなさい。</span>`;
+    return fracAnswerProblem(display, red, red+white);
+  }
+});
+
+addUnit("g2","g2u8","連立方程式の文章題","代金の文章題からx,yを求める", function(level){
+  level = level||1;
+  const range = level===1?8:level===2?12:18;
+  let p,q,n1,m1,n2,m2;
+  do{
+    p = rnd(2,range)*10; q = rnd(2,range)*10;
+    n1 = rnd(1,6); m1 = rnd(1,6);
+    n2 = rnd(1,6); m2 = rnd(1,6);
+  } while(n1*m2 - n2*m1 === 0 || (n1===n2 && m1===m2));
+  const t1 = n1*p + m1*q;
+  const t2 = n2*p + m2*q;
+  const display = `<span class="qtext">りんご1個の値段をx円、みかん1個の値段をy円とします。りんごを${n1}個、みかんを${m1}個買うと代金は${t1}円、りんごを${n2}個、みかんを${m2}個買うと代金は${t2}円でした。x, yの値を求めなさい。</span>`;
+  return xyProblemFreeform(display, p, q);
+});
+
+/* ---- 中学3年(関数・図形・データ・文章題) ---- */
+addUnit("g3","g3u6","関数y=ax²","値・変化の割合・最大最小を求める", function(level){
+  level = level||1;
+  const aRange = level===1?4:level===2?6:8;
+  const xRange = level===1?4:level===2?6:8;
+  const a = rndNonZero(-aRange,aRange);
+  const kind = choice(["value","inverse","rate","bound"]);
+  const fdisp = `y=${fmtAx2(a)}`;
+  if(kind==="value"){
+    const x = rndNonZero(-xRange,xRange);
+    const y = a*x*x;
+    const display = `<span class="qtext">関数 ${fdisp} について、x=${x}のときのyの値を求めなさい。</span>`;
+    return numAnswerProblem(display, y);
+  } else if(kind==="inverse"){
+    const x0 = rnd(1,xRange);
+    const y0 = a*x0*x0;
+    const display = `<span class="qtext">関数 ${fdisp} について、y=${y0}のときのxの値を求めなさい。ただし、x>0とします。</span>`;
+    return numAnswerProblem(display, x0);
+  } else if(kind==="rate"){
+    let x1 = rndNonZero(-xRange,xRange);
+    let x2 = rndNonZero(-xRange,xRange);
+    while(x2===x1) x2 = rndNonZero(-xRange,xRange);
+    const rate = a*(x1+x2);
+    const display = `<span class="qtext">関数 ${fdisp} について、xの値が${x1}から${x2}まで増加するときの変化の割合を求めなさい。</span>`;
+    return numAnswerProblem(display, rate);
+  } else {
+    const p = rnd(1,xRange);
+    const val = a*p*p;
+    const word = a>0 ? "最大値" : "最小値";
+    const display = `<span class="qtext">関数 ${fdisp} について、0≤x≤${p}のときのyの${word}を求めなさい。</span>`;
+    return numAnswerProblem(display, val);
+  }
+});
+
+addUnit("g3","g3u7","三平方の定理","直角三角形の辺の長さを求める", function(level){
+  level = level||1;
+  const triplesL1 = [[3,4,5],[6,8,10],[5,12,13],[9,12,15]];
+  const triplesL2 = triplesL1.concat([[8,15,17],[7,24,25],[12,16,20]]);
+  const triplesL3 = triplesL2.concat([[20,21,29],[9,40,41],[10,24,26],[18,24,30]]);
+  const triples = level===1?triplesL1:level===2?triplesL2:triplesL3;
+  const [a,b,c] = choice(triples);
+  if(Math.random()<0.5){
+    const display = `<span class="qtext">直角三角形の直角をはさむ2辺の長さがそれぞれ${a}cm、${b}cmのとき、斜辺の長さを求めなさい。</span>`;
+    return numAnswerProblem(display, c);
+  } else {
+    const giveA = Math.random()<0.5;
+    const given = giveA ? a : b;
+    const answer = giveA ? b : a;
+    const display = `<span class="qtext">直角三角形の斜辺の長さが${c}cm、直角をはさむ1辺の長さが${given}cmのとき、もう1辺の長さを求めなさい。</span>`;
+    return numAnswerProblem(display, answer);
+  }
+});
+
+addUnit("g3","g3u8","標本調査","母集団の比率から全体の数を推定する", function(level){
+  level = level||1;
+  const sampleOpts = level===1?[20,50]:level===2?[50,100,200]:[100,200,400,500];
+  const S = choice(sampleOpts);
+  const d = rnd(1, Math.max(2,Math.floor(S/10)));
+  const kOpts = level===1?[5,10]:level===2?[10,20,25]:[20,25,50,100];
+  const k = choice(kOpts);
+  const N = S*k;
+  const estimate = d*k;
+  const display = `<span class="qtext">ある工場で作られた製品の中から${S}個を無作為に抽出して調べたところ、不良品が${d}個含まれていました。この工場で作られた製品${N}個の中には、不良品がおよそ何個含まれていると推定されますか。</span>`;
+  return numAnswerProblem(display, estimate);
+});
+
+addUnit("g3","g3u9","二次方程式の文章題","面積の文章題からxを求める", function(level){
+  level = level||1;
+  const xRangeOpts = level===1?[6,10]:level===2?[8,14]:[10,20];
+  const x0 = rnd(xRangeOpts[0], xRangeOpts[1]);
+  const dMax = level===1?3:level===2?5:7;
+  const d = rnd(1, Math.min(dMax, x0-1));
+  const A = x0*(x0-d);
+  const display = `<span class="qtext">縦の長さが横の長さより${d}cm短い長方形があります。面積が${A}cm<sup>2</sup>のとき、横の長さを求めなさい。ただし、横の長さは縦の長さより長いものとします。</span>`;
+  return numAnswerProblem(display, x0);
+});
+
 /* ===================== ランキング(localStorage) ===================== */
 const LS_KEY = "chugaku_calc_drill_records_v1";
 function loadRecords(){
@@ -932,8 +1304,8 @@ function render(){
 function renderHome(){
   let html = `
     <div class="card">
-      <h1 class="title">📘 中学計算ドリル</h1>
-      <div class="subtitle">中1〜中3の計算単元をドリル形式で練習しよう</div>
+      <h1 class="title">📘 中学数学ドリル</h1>
+      <div class="subtitle">中1〜中3の単元をドリル形式で練習しよう</div>
       <div class="grade-grid">
   `;
   GRADES.forEach(g=>{
