@@ -473,8 +473,8 @@ function addUnit(gradeId, id, name, desc, genFn){
 /* ---- 中学1年 ---- */
 addUnit("g1","g1u1","正負の数の加法・減法","たし算とひき算", function(level){
   level = level||1;
-  const range = level===1?10:level===2?15:20;
-  const n = level===1 ? 2 : (level===2 ? choice([2,2,3]) : 3);
+  const range = level===1?14:level===2?22:32;
+  const n = level===1 ? 3 : (level===2 ? choice([3,3,4]) : choice([4,5,5,6]));
   const terms = [];
   for(let i=0;i<n;i++) terms.push(rndNonZero(-range,range));
   const answer = terms.reduce((a,b)=>a+b,0);
@@ -504,11 +504,11 @@ function numAnswerProblem(display, answer){
 addUnit("g1","g1u2","正負の数の乗法・除法","かけ算とわり算", function(level){
   level = level||1;
   if(level===1){
-    const a = rndNonZero(-9,9), b = rndNonZero(-9,9);
+    const a = rndNonZero(-12,12), b = rndNonZero(-12,12);
     return numAnswerProblem(`${fmtP(a)}×${fmtP(b)}`, a*b);
   }
-  const threeTermChance = level===2 ? 0.35 : 0.55;
-  const range = level===2 ? 12 : 15;
+  const threeTermChance = level===2 ? 0.45 : 0.65;
+  const range = level===2 ? 16 : 20;
   const threeTerm = Math.random()<threeTermChance;
   if(!threeTerm){
     const isDiv = Math.random()<0.5;
@@ -522,16 +522,16 @@ addUnit("g1","g1u2","正負の数の乗法・除法","かけ算とわり算", fu
       return numAnswerProblem(`${fmtP(a)}×${fmtP(b)}`, a*b);
     }
   } else {
-    const a = rndNonZero(-9,9), b = rndNonZero(-9,9), c = rndNonZero(-9,9);
+    const a = rndNonZero(-12,12), b = rndNonZero(-12,12), c = rndNonZero(-12,12);
     return numAnswerProblem(`${fmtP(a)}×${fmtP(b)}×${fmtP(c)}`, a*b*c);
   }
 });
 
 addUnit("g1","g1u3","四則混合(累乗を含む)","かっこ・累乗をふくむ計算", function(level){
   level = level||1;
-  const kinds = level===1 ? ["a+b*c","a-b*c","a*b+c"] : ["a+b*c","a-b*c","a*b+c","sq+b","sq-b","a*(b+c)"];
-  const range = level===1?6: level===2?9:12;
-  const sqRange = level===1?10: level===2?20:28;
+  const kinds = level===1 ? ["a+b*c","a-b*c","a*b+c","sq+b"] : ["a+b*c","a-b*c","a*b+c","sq+b","sq-b","a*(b+c)"];
+  const range = level===1?9: level===2?13:17;
+  const sqRange = level===1?14: level===2?26:36;
   const kind = choice(kinds);
   let display, answer;
   if(kind==="a+b*c"){
@@ -558,9 +558,9 @@ addUnit("g1","g1u3","四則混合(累乗を含む)","かっこ・累乗をふく
 
 addUnit("g1","g1u4","文字式の計算(項の整理)","同じ項をまとめる", function(level){
   level = level||1;
-  const range = level===1?6:level===2?9:12;
+  const range = level===1?9:level===2?13:17;
   const useY = level===3; // レベル3はxとy、2種類の文字が混ざった項を同時に整理する
-  const n = level===1 ? 3 : (level===2 ? choice([3,3,4]) : choice([5,6,7]));
+  const n = level===1 ? 4 : (level===2 ? choice([4,4,5]) : choice([6,7,8,9]));
   let cx=0, cy=0, ck=0;
   const parts=[];
   for(let i=0;i<n;i++){
@@ -610,7 +610,7 @@ function polyAnswerProblem(display, expectedPoly){
 
 addUnit("g1","g1u5","文字式の計算(乗法・除法)","1次式のかけ算・わり算", function(level){
   level = level||1;
-  const range = level===1?6:level===2?9:12;
+  const range = level===1?9:level===2?13:17;
   const kindOpts = level===1 ? ["dist"]
     : level===2 ? ["mul","div","dist"]
     : ["mul","div","dist","dist2var","combine2"]; // レベル3: 2種類の文字の分配、2項の分配+同類項整理
@@ -673,11 +673,11 @@ function equationProblem(display, x0){
 }
 addUnit("g1","g1u6","一次方程式","xについて解く", function(level){
   level = level||1;
-  const xyLim = level===1?8:level===2?10:12;
+  const xyLim = level===1?11:level===2?14:17;
   const x0 = rndNonZero(-xyLim,xyLim);
-  const bothSides = level===1 ? false : (level===2 ? Math.random()<0.5 : Math.random()<0.8);
-  const coeffRange = level===1?5:level===2?6:8;
-  const constRange = level===1?10:level===2?12:15;
+  const bothSides = level===1 ? false : (level===2 ? Math.random()<0.6 : Math.random()<0.9);
+  const coeffRange = level===1?7:level===2?9:11;
+  const constRange = level===1?14:level===2?17:21;
   if(!bothSides){
     const a = rndNonZero(-coeffRange,coeffRange);
     const b = rnd(-constRange,constRange);
@@ -706,7 +706,7 @@ function signTerm(c, v){
 }
 addUnit("g2","g2u1","式の加法・減法(多項式)","x, yの多項式をまとめる", function(level){
   level = level||1;
-  const range = level===1?5:level===2?8:12;
+  const range = level===1?7:level===2?11:16;
   const a1=rndNonZero(-range,range), b1=rndNonZero(-range,range);
   const a2=rndNonZero(-range,range), b2=rndNonZero(-range,range);
   const isAdd = level===1 ? true : Math.random()<0.5;
@@ -720,7 +720,7 @@ addUnit("g2","g2u1","式の加法・減法(多項式)","x, yの多項式をま�
 
 addUnit("g2","g2u2","式の乗法・除法(単項式)","単項式×多項式、単項式÷単項式", function(level){
   level = level||1;
-  const range = level===1?6:level===2?8:12;
+  const range = level===1?9:level===2?12:17;
   const kind = level===1 ? "distA" : choice(["distA","distB","mulmono","divmono"]);
   if(kind==="distA"){
     const m = rndNonZero(-range,range), a = rndNonZero(-range,range), b = rndNonZero(-range,range);
@@ -757,8 +757,8 @@ function xyProblem(eq1, eq2, x0, y0){
 }
 function genSimultaneous(level){
   level = level||1;
-  const xyRange = level===1?5:level===2?8:10;
-  const coeffRange = level===1?4:level===2?6:9;
+  const xyRange = level===1?7:level===2?11:14;
+  const coeffRange = level===1?6:level===2?9:13;
   const x0 = rndNonZero(-xyRange,xyRange), y0 = rndNonZero(-xyRange,xyRange);
   let a1,b1,a2,b2;
   do{
@@ -767,30 +767,30 @@ function genSimultaneous(level){
   } while(a1*b2 - a2*b1 === 0);
   const c1 = a1*x0+b1*y0;
   const c2 = a2*x0+b2*y0;
-  const eq1 = `${a1}x${b1>=0?"+"+b1+"y":"−"+Math.abs(b1)+"y"}=${c1}`.replace(/-/g,"−");
-  const eq2 = `${a2}x${b2>=0?"+"+b2+"y":"−"+Math.abs(b2)+"y"}=${c2}`.replace(/-/g,"−");
+  const eq1 = `${termStr(a1,"x")}${signTerm(b1,"y")}=${c1}`.replace(/-/g,"−");
+  const eq2 = `${termStr(a2,"x")}${signTerm(b2,"y")}=${c2}`.replace(/-/g,"−");
   return xyProblem(eq1, eq2, x0, y0);
 }
 addUnit("g2","g2u3","連立方程式(加減法)","2つの式からx,yを求める", function(level){ return genSimultaneous(level); });
 addUnit("g2","g2u4","連立方程式(代入法)","y=…の形から代入して解く", function(level){
   level = level||1;
-  const xyRange = level===1?5:level===2?8:10;
-  const coeffRange = level===1?4:level===2?6:9;
+  const xyRange = level===1?7:level===2?11:14;
+  const coeffRange = level===1?6:level===2?9:13;
   const x0 = rndNonZero(-xyRange,xyRange), y0 = rndNonZero(-xyRange,xyRange);
   const m = rndNonZero(-coeffRange,coeffRange);
   const k = y0 - m*x0;
   const p = rndNonZero(-coeffRange,coeffRange), q = rndNonZero(-coeffRange,coeffRange);
   const r = p*x0 + q*y0;
-  const eq1 = `y=${m}x${termConst(k)}`.replace(/-/g,"−");
-  const eq2 = `${p}x${q>=0?"+"+q+"y":"−"+Math.abs(q)+"y"}=${r}`.replace(/-/g,"−");
+  const eq1 = `y=${termStr(m,"x")}${termConst(k)}`.replace(/-/g,"−");
+  const eq2 = `${termStr(p,"x")}${signTerm(q,"y")}=${r}`.replace(/-/g,"−");
   return xyProblem(eq1, eq2, x0, y0);
 });
 
 /* ---- 中学3年 ---- */
 addUnit("g3","g3u1","多項式の展開","乗法公式で展開する", function(level){
   level = level||1;
-  const kinds = level===1 ? ["ab","sqplus"] : ["ab","sqplus","sqminus","diff"];
-  const range = level===1?5:level===2?9:12;
+  const kinds = level===1 ? ["ab","sqplus","sqminus"] : ["ab","sqplus","sqminus","diff"];
+  const range = level===1?8:level===2?13:17;
   const kind = choice(kinds);
   if(kind==="ab"){
     const a=rndNonZero(-range,range), b=rndNonZero(-range,range);
@@ -809,7 +809,7 @@ addUnit("g3","g3u1","多項式の展開","乗法公式で展開する", function
 
 addUnit("g3","g3u2","因数分解","x^2+bx+cを因数分解する", function(level){
   level = level||1;
-  const range = level===1?6:level===2?9:12;
+  const range = level===1?9:level===2?13:17;
   let p,q;
   do{ p = rndNonZero(-range,range); q = rndNonZero(-range,range); }while(p===0||q===0);
   const b = p+q, c = p*q;
@@ -844,11 +844,11 @@ function surdAnswerProblem(display, expected){
 }
 addUnit("g3","g3u3","平方根の計算","根号をふくむ計算をする", function(level){
   level = level||1;
-  const radicandsSmall = [2,3,5];
-  const radicandsAll = [2,3,5,6,7,10,11];
+  const radicandsSmall = [2,3,5,6];
+  const radicandsAll = [2,3,5,6,7,10,11,13,14];
   const radicands = level===1 ? radicandsSmall : radicandsAll;
-  const multRange = level===1?4:level===2?6:8;
-  const kinds = level===1 ? ["mul"] : ["addsub","mul","diffsq"];
+  const multRange = level===1?5:level===2?7:9;
+  const kinds = level===1 ? ["mul","addsub"] : ["addsub","mul","diffsq"];
   const kind = choice(kinds);
   if(kind==="addsub"){
     const d = choice(radicands);
@@ -862,7 +862,7 @@ addUnit("g3","g3u3","平方根の計算","根号をふくむ計算をする", fu
     const coeff = isAdd ? m1+m2 : bigM-smallM;
     return surdAnswerProblem(disp, {coeff, radicand:d});
   } else if(kind==="mul"){
-    const opts = level===1 ? [2,3,5] : [2,3,5,6,7];
+    const opts = level===1 ? [2,3,5,6] : [2,3,5,6,7,10,11];
     const a = choice(opts);
     const b = choice(opts);
     const disp = `√${a}×√${b}`;
@@ -870,7 +870,7 @@ addUnit("g3","g3u3","平方根の計算","根号をふくむ計算をする", fu
     const simp = simplifySurd(product);
     return surdAnswerProblem(disp, simp);
   } else {
-    const a = rnd(2, level===3?12:9);
+    const a = rnd(2, level===3?16:12);
     const b = choice(radicands);
     // (a+√b)(a−√b) = a^2 - b
     const disp = `(${a}+√${b})(${a}−√${b})`;
@@ -893,7 +893,7 @@ function quadAnswerProblem(display, roots){
 }
 addUnit("g3","g3u4","二次方程式(因数分解)","因数分解を使って解く", function(level){
   level = level||1;
-  const range = level===1?6:level===2?9:12;
+  const range = level===1?9:level===2?13:18;
   const r1 = rnd(-range,range), r2 = rnd(-range,range);
   const b = -(r1+r2), c = r1*r2;
   let disp = "x<sup>2</sup>";
@@ -903,8 +903,8 @@ addUnit("g3","g3u4","二次方程式(因数分解)","因数分解を使って解
 });
 addUnit("g3","g3u5","二次方程式(解の公式)","解の公式を使って解く", function(level){
   level = level||1;
-  const range = level===1?6:level===2?6:8;
-  const a = level===1 ? 1 : (level===2 ? choice([1,1,2]) : choice([1,2,2]));
+  const range = level===1?8:level===2?9:11;
+  const a = level===1 ? 1 : (level===2 ? choice([1,1,2]) : choice([1,2,2,3]));
   const pick = ()=> (level===1) ? rnd(-range,range) : (Math.random()<0.5 ? rnd(-range,range) : rnd(-range,range)/2);
   let r1 = pick(), r2 = pick();
   if(a===1){ r1=Math.round(r1); r2=Math.round(r2); }
@@ -995,12 +995,12 @@ function fmtAx2(a){
 /* ---- 中学1年(関数・図形・データ・文章題) ---- */
 addUnit("g1","g1u7","比例・反比例","yはxに比例・反比例する関係を利用する", function(level){
   level = level||1;
-  const range = level===1?6:level===2?9:12;
+  const range = level===1?9:level===2?13:17;
   const isProp = Math.random() < 0.5;
   const askX = Math.random() < 0.5; // true: xを求める / false: yを求める
   if(isProp){
     const a = rndNonZero(-range,range);
-    const x0 = rndNonZero(1, level===1?6:9);
+    const x0 = rndNonZero(1, level===1?8:12);
     const y0 = a*x0;
     const x1 = rndNonZero(-9,9);
     const y1 = a*x1;
@@ -1033,7 +1033,7 @@ addUnit("g1","g1u7","比例・反比例","yはxに比例・反比例する関係
 
 addUnit("g1","g1u8","図形の計量(円・立体)","円・おうぎ形・角柱円柱の周や体積を求める", function(level){
   level = level||1;
-  const range = level===1?[2,6]:level===2?[3,9]:[4,12];
+  const range = level===1?[3,8]:level===2?[4,12]:[6,16];
   const kind = choice(["circumference","area","prism","cylinder"]);
   if(kind==="circumference"){
     const r = rnd(range[0],range[1]);
@@ -1057,7 +1057,7 @@ addUnit("g1","g1u8","図形の計量(円・立体)","円・おうぎ形・角柱
 
 addUnit("g1","g1u9","データの活用(代表値)","平均値・中央値・最頻値を求める", function(level){
   level = level||1;
-  const hi = level===1?20:level===2?50:100;
+  const hi = level===1?30:level===2?70:140;
   const m = rnd(0,hi);
   const others = [];
   while(others.length<3){
@@ -1093,12 +1093,12 @@ addUnit("g1","g1u9","データの活用(代表値)","平均値・中央値・最
 
 addUnit("g1","g1u10","方程式の文章題","文章から式をつくって答えを求める", function(level){
   level = level||1;
-  const hi = level===1?10:level===2?15:20;
+  const hi = level===1?14:level===2?20:28;
   const kind = choice(["abstract","price"]);
   if(kind==="abstract"){
     const x0 = rndNonZero(1,hi) * choice([1,-1]);
-    const a = rnd(2,9);
-    const b = rnd(-10,10);
+    const a = rnd(2,12);
+    const b = rnd(-14,14);
     const total = a*x0+b;
     let display;
     if(b>0) display = `<span class="qtext">ある数xを${a}倍して${b}を足すと、${total}になりました。xの値を求めなさい。</span>`;
@@ -1106,7 +1106,7 @@ addUnit("g1","g1u10","方程式の文章題","文章から式をつくって答�
     else display = `<span class="qtext">ある数xを${a}倍すると、${total}になりました。xの値を求めなさい。</span>`;
     return numAnswerProblem(display, x0);
   } else {
-    const p = rnd(50,300);
+    const p = rnd(50,450);
     const n = rnd(Math.max(2,Math.floor(hi/3)), hi);
     const total = p*n;
     if(Math.random()<0.5){
@@ -1122,7 +1122,7 @@ addUnit("g1","g1u10","方程式の文章題","文章から式をつくって答�
 /* ---- 中学2年(関数・図形・データ・文章題) ---- */
 addUnit("g2","g2u5","一次関数","yの値・xの値・変化の割合を求める", function(level){
   level = level||1;
-  const range = level===1?6:level===2?9:12;
+  const range = level===1?9:level===2?13:17;
   const a = rndNonZero(-range,range);
   const b = rnd(-range,range);
   const kind = choice(["value","inverse","rate"]);
@@ -1157,7 +1157,7 @@ addUnit("g2","g2u6","図形の角度","平行線の角・多角形の内角を�
       : `<span class="qtext">2本の平行線が1本の直線と交わっています。一方の角が${x}°のとき、その錯角の大きさを求めなさい。</span>`;
     return numAnswerProblem(display, x);
   } else if(kind==="polygonSum"){
-    const nOpts = level===1?[3,4,5,6]:level===2?[5,6,7,8]:[7,8,9,10,12];
+    const nOpts = level===1?[3,4,5,6,7]:level===2?[6,7,8,9]:[8,9,10,12,15];
     const n = choice(nOpts);
     const sum = 180*(n-2);
     const display = `<span class="qtext">${n}角形の内角の和を求めなさい。</span>`;
@@ -1192,8 +1192,8 @@ addUnit("g2","g2u7","確率","さいころ・玉の確率を求める(分数で�
     const display = `<span class="qtext">2個のさいころを同時に投げるとき、出た目の和が${s}になる確率を求めなさい。</span>`;
     return fracAnswerProblem(display, cnt, 36);
   } else {
-    const red = rnd(1, level===1?4:level===2?6:8);
-    const white = rnd(1, level===1?4:level===2?6:8);
+    const red = rnd(1, level===1?6:level===2?8:10);
+    const white = rnd(1, level===1?6:level===2?8:10);
     const display = `<span class="qtext">赤玉${red}個、白玉${white}個が入った袋から玉を1個取り出すとき、赤玉が出る確率を求めなさい。</span>`;
     return fracAnswerProblem(display, red, red+white);
   }
@@ -1201,7 +1201,7 @@ addUnit("g2","g2u7","確率","さいころ・玉の確率を求める(分数で�
 
 addUnit("g2","g2u8","連立方程式の文章題","代金の文章題からx,yを求める", function(level){
   level = level||1;
-  const range = level===1?8:level===2?12:18;
+  const range = level===1?11:level===2?16:24;
   let p,q,n1,m1,n2,m2;
   do{
     p = rnd(2,range)*10; q = rnd(2,range)*10;
@@ -1217,8 +1217,8 @@ addUnit("g2","g2u8","連立方程式の文章題","代金の文章題からx,y�
 /* ---- 中学3年(関数・図形・データ・文章題) ---- */
 addUnit("g3","g3u6","関数y=ax²","値・変化の割合・最大最小を求める", function(level){
   level = level||1;
-  const aRange = level===1?4:level===2?6:8;
-  const xRange = level===1?4:level===2?6:8;
+  const aRange = level===1?6:level===2?9:12;
+  const xRange = level===1?6:level===2?9:12;
   const a = rndNonZero(-aRange,aRange);
   const kind = choice(["value","inverse","rate","bound"]);
   const fdisp = `y=${fmtAx2(a)}`;
@@ -1251,8 +1251,8 @@ addUnit("g3","g3u6","関数y=ax²","値・変化の割合・最大最小を求�
 addUnit("g3","g3u7","三平方の定理","直角三角形の辺の長さを求める", function(level){
   level = level||1;
   const triplesL1 = [[3,4,5],[6,8,10],[5,12,13],[9,12,15]];
-  const triplesL2 = triplesL1.concat([[8,15,17],[7,24,25],[12,16,20]]);
-  const triplesL3 = triplesL2.concat([[20,21,29],[9,40,41],[10,24,26],[18,24,30]]);
+  const triplesL2 = triplesL1.concat([[8,15,17],[7,24,25],[12,16,20],[15,20,25]]);
+  const triplesL3 = triplesL2.concat([[20,21,29],[9,40,41],[10,24,26],[18,24,30],[16,30,34],[14,48,50],[11,60,61],[21,28,35]]);
   const triples = level===1?triplesL1:level===2?triplesL2:triplesL3;
   const [a,b,c] = choice(triples);
   if(Math.random()<0.5){
@@ -1269,10 +1269,10 @@ addUnit("g3","g3u7","三平方の定理","直角三角形の辺の長さを求�
 
 addUnit("g3","g3u8","標本調査","母集団の比率から全体の数を推定する", function(level){
   level = level||1;
-  const sampleOpts = level===1?[20,50]:level===2?[50,100,200]:[100,200,400,500];
+  const sampleOpts = level===1?[20,50]:level===2?[50,100,200]:[200,400,500,1000];
   const S = choice(sampleOpts);
-  const d = rnd(1, Math.max(2,Math.floor(S/10)));
-  const kOpts = level===1?[5,10]:level===2?[10,20,25]:[20,25,50,100];
+  const d = rnd(1, Math.max(2,Math.floor(S/8)));
+  const kOpts = level===1?[5,10]:level===2?[10,20,25]:[25,50,100,200];
   const k = choice(kOpts);
   const N = S*k;
   const estimate = d*k;
@@ -1282,9 +1282,9 @@ addUnit("g3","g3u8","標本調査","母集団の比率から全体の数を推�
 
 addUnit("g3","g3u9","二次方程式の文章題","面積の文章題からxを求める", function(level){
   level = level||1;
-  const xRangeOpts = level===1?[6,10]:level===2?[8,14]:[10,20];
+  const xRangeOpts = level===1?[8,14]:level===2?[12,20]:[16,28];
   const x0 = rnd(xRangeOpts[0], xRangeOpts[1]);
-  const dMax = level===1?3:level===2?5:7;
+  const dMax = level===1?4:level===2?6:9;
   const d = rnd(1, Math.min(dMax, x0-1));
   const A = x0*(x0-d);
   const display = `<span class="qtext">縦の長さが横の長さより${d}cm短い長方形があります。面積が${A}cm<sup>2</sup>のとき、横の長さを求めなさい。ただし、横の長さは縦の長さより長いものとします。</span>`;
