@@ -282,6 +282,15 @@ function chain(terms){
   return s;
 }
 
+// スマホ・タブレットのようにタッチが主な入力方法の端末かどうかを判定する。
+// (true: 端末のソフトウェアキーボードを出さないよう readonly にする / false: PCなど
+//  実物のキーボード・テンキーで直接入力できるように readonly を外す)
+function isCoarsePointer(){
+  try{
+    return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+  }catch(e){ return false; }
+}
+
 /* ===================== 音 (Web Audio) ===================== */
 let actx = null;
 function ctx(){ if(!actx){ actx = new (window.AudioContext||window.webkitAudioContext)(); } return actx; }
@@ -1497,27 +1506,31 @@ function renderDrill(){
   const total = STATE.problems.length;
   const p = STATE.problems[STATE.index];
 
+  // タッチ端末(スマホ・タブレット)ではソフトウェアキーボードを出さないよう readonly にし、
+  // PCなど実キーボード・テンキーが使える環境では readonly を外して直接入力できるようにする。
+  const roAttr = isCoarsePointer() ? 'inputmode="none" readonly' : "";
+
   let inputHtml = "";
   if(p.mode==="text"){
     inputHtml = `
       <div class="answer-row">
-        <input class="ans-input" id="ansInput" type="text" inputmode="none" readonly autocomplete="off" placeholder="${p.placeholder||""}">
+        <input class="ans-input" id="ansInput" type="text" ${roAttr} autocomplete="off" placeholder="${p.placeholder||""}">
       </div>
       <div class="keypad" id="keypad"></div>
     `;
   } else if(p.mode==="xy"){
     inputHtml = `
       <div class="answer-row">
-        <span class="xy-label">x=</span><input class="ans-input small2" id="ansX" type="text" inputmode="none" readonly>
-        <span class="xy-label">y=</span><input class="ans-input small2" id="ansY" type="text" inputmode="none" readonly>
+        <span class="xy-label">x=</span><input class="ans-input small2" id="ansX" type="text" ${roAttr}>
+        <span class="xy-label">y=</span><input class="ans-input small2" id="ansY" type="text" ${roAttr}>
       </div>
       <div class="keypad" id="keypad"></div>
     `;
   } else if(p.mode==="factor"){
     inputHtml = `
       <div class="answer-row">
-        <span class="xy-label">(x+</span><input class="ans-input small2" id="ansA" type="text" inputmode="none" readonly>
-        <span class="xy-label">)(x+</span><input class="ans-input small2" id="ansB" type="text" inputmode="none" readonly>
+        <span class="xy-label">(x+</span><input class="ans-input small2" id="ansA" type="text" ${roAttr}>
+        <span class="xy-label">)(x+</span><input class="ans-input small2" id="ansB" type="text" ${roAttr}>
         <span class="xy-label">)</span>
       </div>
       <div class="keypad" id="keypad"></div>
